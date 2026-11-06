@@ -8,47 +8,221 @@
         <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Background="#D90B1220">
+    <Grid x:Name="Root" Background="#E6070B16" RequestedTheme="Dark">
+        <Grid.Resources>
+            <!-- Content entrance: fade in while sliding up and settling from a slight zoom. -->
+            <Storyboard x:Name="EntranceStoryboard">
+                <DoubleAnimation Storyboard.TargetName="ContentPanel" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.5" />
+                <DoubleAnimation Storyboard.TargetName="ContentTransform" Storyboard.TargetProperty="TranslateY" From="48" To="0" Duration="0:0:0.8">
+                    <DoubleAnimation.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut" Exponent="6" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="ContentTransform" Storyboard.TargetProperty="ScaleX" From="0.96" To="1" Duration="0:0:0.8">
+                    <DoubleAnimation.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut" Exponent="6" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="ContentTransform" Storyboard.TargetProperty="ScaleY" From="0.96" To="1" Duration="0:0:0.8">
+                    <DoubleAnimation.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut" Exponent="6" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:1.2" />
+            </Storyboard>
+
+            <!-- Two expanding rings around the icon, offset by half a period. -->
+            <Storyboard x:Name="PulseStoryboard" RepeatBehavior="Forever">
+                <DoubleAnimation Storyboard.TargetName="PulseA" Storyboard.TargetProperty="Opacity" From="0.55" To="0" Duration="0:0:2.4" />
+                <DoubleAnimation Storyboard.TargetName="PulseATransform" Storyboard.TargetProperty="ScaleX" From="1" To="1.9" Duration="0:0:2.4">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="PulseATransform" Storyboard.TargetProperty="ScaleY" From="1" To="1.9" Duration="0:0:2.4">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="PulseB" Storyboard.TargetProperty="Opacity" From="0.55" To="0" Duration="0:0:2.4" BeginTime="0:0:1.2" />
+                <DoubleAnimation Storyboard.TargetName="PulseBTransform" Storyboard.TargetProperty="ScaleX" From="1" To="1.9" Duration="0:0:2.4" BeginTime="0:0:1.2">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="PulseBTransform" Storyboard.TargetProperty="ScaleY" From="1" To="1.9" Duration="0:0:2.4" BeginTime="0:0:1.2">
+                    <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard>
+
+            <!-- Slow drift of the background light orbs. -->
+            <Storyboard x:Name="DriftStoryboard" RepeatBehavior="Forever" AutoReverse="True">
+                <DoubleAnimation Storyboard.TargetName="OrbATransform" Storyboard.TargetProperty="TranslateX" From="-60" To="80" Duration="0:0:14">
+                    <DoubleAnimation.EasingFunction>
+                        <SineEase EasingMode="EaseInOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="OrbATransform" Storyboard.TargetProperty="TranslateY" From="-40" To="60" Duration="0:0:11">
+                    <DoubleAnimation.EasingFunction>
+                        <SineEase EasingMode="EaseInOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="OrbBTransform" Storyboard.TargetProperty="TranslateX" From="70" To="-90" Duration="0:0:16">
+                    <DoubleAnimation.EasingFunction>
+                        <SineEase EasingMode="EaseInOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation Storyboard.TargetName="OrbBTransform" Storyboard.TargetProperty="TranslateY" From="50" To="-50" Duration="0:0:13">
+                    <DoubleAnimation.EasingFunction>
+                        <SineEase EasingMode="EaseInOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard>
+        </Grid.Resources>
+
+        <Grid x:Name="Glow" Opacity="0" IsHitTestVisible="False">
+            <Border x:Name="GlowWash" />
+            <Ellipse x:Name="OrbA" Width="900" Height="900" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-280,-360,0,0">
+                <Ellipse.RenderTransform>
+                    <CompositeTransform x:Name="OrbATransform" />
+                </Ellipse.RenderTransform>
+            </Ellipse>
+            <Ellipse x:Name="OrbB" Width="1100" Height="1100" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-360,-480">
+                <Ellipse.RenderTransform>
+                    <CompositeTransform x:Name="OrbBTransform" />
+                </Ellipse.RenderTransform>
+            </Ellipse>
+        </Grid>
+
+        <!-- Top bar: brand on the left, clock on the right. -->
+        <Grid VerticalAlignment="Top" Padding="48,36">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Image x:Name="BrandIcon" Width="28" Height="28" />
+                <TextBlock Text="StandUP" FontSize="20" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                <Border x:Name="PreviewChip" Visibility="Collapsed" Padding="10,3" CornerRadius="10" Background="#33FFFFFF" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock x:Name="PreviewChipText" FontSize="12" Foreground="White" />
+                </Border>
+            </StackPanel>
+            <TextBlock
+                x:Name="ClockText"
+                HorizontalAlignment="Right"
+                FontFamily="Segoe UI Variable Display"
+                FontSize="30"
+                FontWeight="Light"
+                Foreground="#DDFFFFFF" />
+        </Grid>
+
         <StackPanel
+            x:Name="ContentPanel"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Spacing="20">
-            <FontIcon
-                x:Name="IconGlyph"
-                FontSize="96"
-                Foreground="#FF4CC2FF"
-                HorizontalAlignment="Center" />
+            Spacing="22"
+            Opacity="0"
+            RenderTransformOrigin="0.5,0.5">
+            <StackPanel.RenderTransform>
+                <CompositeTransform x:Name="ContentTransform" />
+            </StackPanel.RenderTransform>
+
+            <Grid Width="148" Height="148" HorizontalAlignment="Center" Margin="0,0,0,12">
+                <Ellipse x:Name="PulseA" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" Opacity="0">
+                    <Ellipse.RenderTransform>
+                        <CompositeTransform x:Name="PulseATransform" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+                <Ellipse x:Name="PulseB" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" Opacity="0">
+                    <Ellipse.RenderTransform>
+                        <CompositeTransform x:Name="PulseBTransform" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+                <Ellipse x:Name="IconDisc" />
+                <FontIcon x:Name="IconGlyph" FontSize="64" Foreground="White" />
+            </Grid>
+
+            <Border
+                x:Name="Chip"
+                HorizontalAlignment="Center"
+                Padding="14,5"
+                CornerRadius="14"
+                Background="#1FFFFFFF"
+                BorderBrush="#33FFFFFF"
+                BorderThickness="1">
+                <TextBlock x:Name="ChipText" FontSize="14" Foreground="#E6FFFFFF" />
+            </Border>
+
             <TextBlock
                 x:Name="TitleText"
-                FontSize="56"
+                FontFamily="Segoe UI Variable Display"
+                FontSize="64"
                 FontWeight="SemiBold"
                 Foreground="White"
+                TextAlignment="Center"
+                TextWrapping="Wrap"
+                MaxWidth="1100"
                 HorizontalAlignment="Center" />
             <TextBlock
                 x:Name="SubtitleText"
-                FontSize="24"
-                Foreground="#FFD0D6E0"
+                FontSize="22"
+                LineHeight="34"
+                Foreground="#C8FFFFFF"
                 TextAlignment="Center"
                 TextWrapping="Wrap"
-                MaxWidth="900"
+                MaxWidth="820"
                 HorizontalAlignment="Center" />
+
             <StackPanel
                 Orientation="Horizontal"
                 Spacing="16"
-                Margin="0,24,0,0"
+                Margin="0,28,0,0"
                 HorizontalAlignment="Center">
                 <Button
                     x:Name="PrimaryButton"
                     Style="{StaticResource AccentButtonStyle}"
-                    FontSize="22"
-                    Padding="40,14"
-                    Click="OnPrimaryClick" />
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    Padding="44,16"
+                    MinWidth="220"
+                    CornerRadius="30"
+                    Click="OnPrimaryClick">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE73E;" FontSize="18" />
+                        <TextBlock x:Name="PrimaryText" />
+                    </StackPanel>
+                </Button>
                 <Button
                     x:Name="SecondaryButton"
-                    FontSize="22"
-                    Padding="40,14"
-                    Click="OnSecondaryClick" />
+                    FontSize="20"
+                    Padding="40,16"
+                    CornerRadius="30"
+                    Click="OnSecondaryClick">
+                    <Button.Resources>
+                        <SolidColorBrush x:Key="ButtonBackground" Color="#1FFFFFFF" />
+                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#33FFFFFF" />
+                        <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
+                        <SolidColorBrush x:Key="ButtonBorderBrush" Color="#40FFFFFF" />
+                        <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#66FFFFFF" />
+                        <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#33FFFFFF" />
+                        <SolidColorBrush x:Key="ButtonForeground" Color="White" />
+                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                        <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#CCFFFFFF" />
+                    </Button.Resources>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE916;" FontSize="18" />
+                        <TextBlock x:Name="SecondaryText" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="8"
+            Margin="0,0,0,40">
+            <FontIcon Glyph="&#xE72E;" FontSize="14" Foreground="#99FFFFFF" />
+            <TextBlock x:Name="HintText" FontSize="14" Foreground="#99FFFFFF" />
         </StackPanel>
     </Grid>
 </Window>

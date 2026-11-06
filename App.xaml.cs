@@ -14,7 +14,7 @@ public partial class App : Application
     ReminderEngine _engine = null!;
     OverlayManager _overlays = null!;
     TrayHost _tray = null!;
-    SettingsWindow? _settingsWindow;
+    MainWindow? _settingsWindow;
     DispatcherQueue _queue = null!;
     string _iconPath = null!;
     string _lastTip = string.Empty;
@@ -70,7 +70,13 @@ public partial class App : Application
         thread.Start();
 
         // WinUI exits when the last window closes, so the settings window is kept alive (hidden) for the whole session.
-        _settingsWindow = new SettingsWindow(_engine, _settings, _iconPath, _overlays.Preview, ExitApp);
+        AppHost.Engine = _engine;
+        AppHost.Settings = _settings;
+        AppHost.Preview = _overlays.Preview;
+        AppHost.Exit = ExitApp;
+        AppHost.IconPath = _iconPath;
+        _settingsWindow = new MainWindow();
+        AppHost.MainWindow = _settingsWindow;
         if (!Environment.GetCommandLineArgs().Contains("--background"))
         {
             ShowSettings();

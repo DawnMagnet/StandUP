@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StandUP.Views.Pages.RemindersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:StandUP.Controls"
+    Background="Transparent">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40" />
+                </TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+
+            <TextBlock Text="{c:L Key=nav.reminders}" Style="{StaticResource PageTitleStyle}" />
+
+            <SelectorBar x:Name="PhaseSelector" SelectionChanged="OnPhaseSelectionChanged" Margin="-4,0,0,12">
+                <SelectorBarItem x:Name="StandTab" Text="{c:L Key=reminders.stand}" IsSelected="True">
+                    <SelectorBarItem.Icon>
+                        <FontIcon Glyph="&#xE805;" />
+                    </SelectorBarItem.Icon>
+                </SelectorBarItem>
+                <SelectorBarItem x:Name="SitTab" Text="{c:L Key=reminders.sit}">
+                    <SelectorBarItem.Icon>
+                        <FontIcon Glyph="&#xE7F4;" />
+                    </SelectorBarItem.Icon>
+                </SelectorBarItem>
+            </SelectorBar>
+
+            <TextBlock Text="{c:L Key=reminders.preview}" Style="{StaticResource SectionHeaderStyle}" Margin="2,4,0,8" />
+
+            <!-- Miniature of the full-screen reminder that follows the text fields as you type. -->
+            <Grid Height="320" CornerRadius="{StaticResource HeroCornerRadius}" Background="#FF0B1020">
+                <Border x:Name="PreviewGlow" />
+                <Ellipse x:Name="PreviewOrbA" Width="360" Height="360" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-120,-160,0,0" />
+                <Ellipse x:Name="PreviewOrbB" Width="420" Height="420" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-160,-220" />
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Padding="32,0">
+                    <Border x:Name="PreviewIconBack" Width="64" Height="64" CornerRadius="32" HorizontalAlignment="Center">
+                        <FontIcon x:Name="PreviewGlyph" FontSize="28" Foreground="White" />
+                    </Border>
+                    <TextBlock
+                        x:Name="PreviewTitle"
+                        FontSize="28"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Center" />
+                    <TextBlock
+                        x:Name="PreviewMessage"
+                        FontSize="14"
+                        Foreground="#CCFFFFFF"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        MaxWidth="520"
+                        HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <Border x:Name="PreviewPrimary" CornerRadius="18" Padding="22,8">
+                            <TextBlock x:Name="PreviewPrimaryText" Foreground="White" FontWeight="SemiBold" />
+                        </Border>
+                        <Border x:Name="PreviewSecondary" CornerRadius="18" Padding="22,8" Background="#26FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1">
+                            <TextBlock x:Name="PreviewSecondaryText" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                <Button Style="{StaticResource AccentButtonStyle}" Click="OnPreviewClick" Padding="16,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE740;" FontSize="16" />
+                        <TextBlock Text="{c:L Key=reminders.previewFull}" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnResetClick" Padding="16,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE777;" FontSize="16" />
+                        <TextBlock Text="{c:L Key=custom.reset}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <TextBlock Text="{c:L Key=reminders.text}" Style="{StaticResource SectionHeaderStyle}" />
+            <Border Style="{StaticResource CardBorderStyle}" Padding="24,20">
+                <Grid ColumnSpacing="16" RowSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <InfoBar
+                        Grid.ColumnSpan="2"
+                        IsOpen="True"
+                        IsClosable="False"
+                        Severity="Informational"
+                        Message="{c:L Key=custom.hint}" />
+                    <TextBox x:Name="TitleBox" Grid.Row="1" Grid.ColumnSpan="2" Header="{c:L Key=field.title}" TextChanged="OnTextChanged" LostFocus="OnFieldLostFocus" />
+                    <TextBox
+                        x:Name="MessageBox"
+                        Grid.Row="2"
+                        Grid.ColumnSpan="2"
+                        Header="{c:L Key=field.message}"
+                        AcceptsReturn="True"
+                        TextWrapping="Wrap"
+                        MinHeight="88"
+                        TextChanged="OnTextChanged"
+                        LostFocus="OnFieldLostFocus" />
+                    <TextBox x:Name="ConfirmBox" Grid.Row="3" Header="{c:L Key=field.confirm}" TextChanged="OnTextChanged" LostFocus="OnFieldLostFocus" />
+                    <TextBox x:Name="SnoozeBox" Grid.Row="3" Grid.Column="1" Header="{c:L Key=field.snooze}" TextChanged="OnTextChanged" LostFocus="OnFieldLostFocus" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

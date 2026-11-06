@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StandUP.Views.Pages.SchedulePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:StandUP.Controls"
+    Background="Transparent">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40" />
+                </TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+
+            <TextBlock Text="{c:L Key=nav.schedule}" Style="{StaticResource PageTitleStyle}" />
+
+            <!-- Visual summary of one sit/stand cycle. -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="24,20">
+                <StackPanel Spacing="14">
+                    <TextBlock x:Name="CycleText" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid x:Name="CycleBar" Height="44" ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="SitColumn" Width="50*" />
+                            <ColumnDefinition x:Name="StandColumn" Width="15*" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="SitSegment" CornerRadius="10" Padding="14,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE7F4;" FontSize="14" Foreground="White" />
+                                <TextBlock x:Name="SitSegmentText" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="StandSegment" Grid.Column="1" CornerRadius="10" Padding="10,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE805;" FontSize="14" Foreground="White" />
+                                <TextBlock x:Name="StandSegmentText" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{c:L Key=schedule.presets}" Style="{StaticResource SectionHeaderStyle}" />
+            <Grid x:Name="PresetGrid" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+            </Grid>
+
+            <TextBlock Text="{c:L Key=schedule.timing}" Style="{StaticResource SectionHeaderStyle}" />
+            <c:SettingsCard Glyph="&#xE7F4;" Header="{c:L Key=schedule.sit}" Description="{c:L Key=schedule.sitDesc}">
+                <NumberBox
+                    x:Name="SitBox"
+                    Width="148"
+                    Minimum="1" Maximum="480"
+                    SmallChange="5" LargeChange="10"
+                    SpinButtonPlacementMode="Inline"
+                    ValueChanged="OnSitChanged" />
+            </c:SettingsCard>
+            <c:SettingsCard Glyph="&#xE805;" Header="{c:L Key=schedule.stand}" Description="{c:L Key=schedule.standDesc}">
+                <NumberBox
+                    x:Name="StandBox"
+                    Width="148"
+                    Minimum="1" Maximum="240"
+                    SmallChange="1" LargeChange="5"
+                    SpinButtonPlacementMode="Inline"
+                    ValueChanged="OnStandChanged" />
+            </c:SettingsCard>
+            <c:SettingsCard Glyph="&#xE916;" Header="{c:L Key=schedule.snooze}" Description="{c:L Key=schedule.snoozeDesc}">
+                <NumberBox
+                    x:Name="SnoozeBox"
+                    Width="148"
+                    Minimum="1" Maximum="60"
+                    SmallChange="1" LargeChange="5"
+                    SpinButtonPlacementMode="Inline"
+                    ValueChanged="OnSnoozeChanged" />
+            </c:SettingsCard>
+            <c:SettingsCard Glyph="&#xE823;" Header="{c:L Key=schedule.allowSnooze}" Description="{c:L Key=schedule.allowSnoozeDesc}">
+                <ToggleSwitch x:Name="SnoozeSwitch" OnContent="" OffContent="" MinWidth="0" Toggled="OnSnoozeToggled" />
+            </c:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

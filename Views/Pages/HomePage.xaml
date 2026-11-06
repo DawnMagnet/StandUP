@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StandUP.Views.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:StandUP.Controls"
+    Background="Transparent">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection>
+                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40" />
+                </TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+
+            <StackPanel Margin="0,4,0,20" Spacing="2">
+                <TextBlock x:Name="GreetingText" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="DateText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Hero: progress ring and the current phase. -->
+            <Grid
+                CornerRadius="{StaticResource HeroCornerRadius}"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Border x:Name="HeroGlow" CornerRadius="{StaticResource HeroCornerRadius}" />
+                <Grid Padding="32,32,36,32" ColumnSpacing="40">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Width="232" Height="232" VerticalAlignment="Center">
+                        <Ellipse
+                            StrokeThickness="16"
+                            Stroke="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            Opacity="0.9" />
+                        <Path x:Name="RingArc" StrokeThickness="16" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
+                            <TextBlock
+                                x:Name="CountdownText"
+                                FontFamily="Segoe UI Variable Display"
+                                FontSize="54"
+                                FontWeight="SemiBold"
+                                HorizontalAlignment="Center" />
+                            <TextBlock
+                                x:Name="RemainingText"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="10">
+                        <Border
+                            x:Name="PhaseChip"
+                            HorizontalAlignment="Left"
+                            Padding="12,4,14,4"
+                            CornerRadius="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon x:Name="PhaseGlyph" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock x:Name="PhaseText" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock x:Name="HeadlineText" Style="{StaticResource SubtitleTextBlockStyle}" FontSize="26" TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="DescriptionText"
+                            TextWrapping="Wrap"
+                            MaxWidth="460"
+                            HorizontalAlignment="Left"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,14,0,0">
+                            <Button x:Name="BreakNowButton" Style="{StaticResource AccentButtonStyle}" Click="OnBreakNowClick" Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7EE;" FontSize="16" />
+                                    <TextBlock Text="{c:L Key=btn.breakNow}" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="PauseButton" Click="OnPauseClick" Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon x:Name="PauseGlyph" FontSize="16" />
+                                    <TextBlock x:Name="PauseText" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="OnRestartClick" Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE72C;" FontSize="16" />
+                                    <TextBlock Text="{c:L Key=btn.restart}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <TextBlock Text="{c:L Key=home.today}" Style="{StaticResource SectionHeaderStyle}" />
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Spacing="12">
+                        <Border x:Name="SitIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
+                            <FontIcon Glyph="&#xE7F4;" FontSize="18" Foreground="White" />
+                        </Border>
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="SitStatText" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{c:L Key=stats.sitting}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Spacing="12">
+                        <Border x:Name="StandIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
+                            <FontIcon Glyph="&#xE805;" FontSize="18" Foreground="White" />
+                        </Border>
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="StandStatText" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{c:L Key=stats.standing}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel Spacing="12">
+                        <Border x:Name="BreakIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
+                            <FontIcon Glyph="&#xE734;" FontSize="18" Foreground="White" />
+                        </Border>
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="BreakStatText" Style="{StaticResource SubtitleTextBlockStyle}" />
+                            <TextBlock Text="{c:L Key=stats.breaks}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <InfoBar
+                Margin="0,20,0,0"
+                IsOpen="True"
+                IsClosable="False"
+                Severity="Informational"
+                Title="{c:L Key=home.infoTitle}"
+                Message="{c:L Key=home.info}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>
