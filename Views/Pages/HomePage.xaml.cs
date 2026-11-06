@@ -103,7 +103,8 @@ public sealed partial class HomePage : Page
         PauseText.Text = Loc.T(_engine.IsPaused ? "btn.resume" : "btn.pause");
         BreakNowButton.IsEnabled = !_engine.IsPrompting;
 
-        LockInfo.Message = Loc.T($"lock.{AppHost.Settings.Current.LockMode}.desc") + " " + Loc.T("home.trayNote");
+        LockInfo.Message = Loc.T($"lock.{AppHost.Settings.Current.LockMode}.desc")
+            + (Loc.Current == Loc.ZhCN ? string.Empty : " ") + Loc.T("home.trayNote");
 
         var stats = _engine.Stats;
         SitStatText.Text = AppHost.Duration(stats.Sitting);
