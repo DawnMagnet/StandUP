@@ -82,6 +82,18 @@
             <c:SettingsCard Glyph="&#xE823;" Header="{c:L Key=schedule.allowSnooze}" Description="{c:L Key=schedule.allowSnoozeDesc}">
                 <ToggleSwitch x:Name="SnoozeSwitch" OnContent="" OffContent="" MinWidth="0" Toggled="OnSnoozeToggled" />
             </c:SettingsCard>
+
+            <TextBlock Text="{c:L Key=lock.header}" Style="{StaticResource SectionHeaderStyle}" />
+            <Border Style="{StaticResource CardBorderStyle}" Padding="20,12,20,16">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE72E;" FontSize="20" Width="24" VerticalAlignment="Top" Margin="0,10,0,0" />
+                    <RadioButtons x:Name="LockModeButtons" Grid.Column="1" SelectionChanged="OnLockModeChanged" />
+                </Grid>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

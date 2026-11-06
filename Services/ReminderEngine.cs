@@ -88,21 +88,19 @@ public sealed class ReminderEngine : IDisposable
 
         if (IsLocked)
         {
+            // Only these modes keep the timer running while locked. A reminder that comes due
+            // waits until the unlock, when the next tick raises it.
+            if (!IsPaused && !IsPrompting && LockMode is LockBehavior.Continue or LockBehavior.Sitting)
+            {
+                Accrue(delta);
+                Changed?.Invoke();
+            }
             return;
         }
 
         if (!IsPaused && !IsPrompting)
         {
-            Stats.RollOver();
-            if (Phase == Phase.Sitting)
-            {
-                Stats.SittingSeconds += delta.TotalSeconds;
-            }
-            else
-            {
-                Stats.StandingSeconds += delta.TotalSeconds;
-            }
-            Elapsed += delta;
+            Accrue(delta);
             if (Phase == Phase.Sitting && Elapsed >= SitDuration)
             {
                 Enter(Phase.StandPrompt, TimeSpan.Zero);
@@ -116,6 +114,22 @@ public sealed class ReminderEngine : IDisposable
         }
 
         Changed?.Invoke();
+    }
+
+    string LockMode => _settings.Current.LockMode;
+
+    void Accrue(TimeSpan delta)
+    {
+        Stats.RollOver();
+        if (Phase == Phase.Sitting)
+        {
+            Stats.SittingSeconds += delta.TotalSeconds;
+        }
+        else
+        {
+            Stats.StandingSeconds += delta.TotalSeconds;
+        }
+        Elapsed += delta;
     }
 
     void Enter(Phase phase, TimeSpan elapsed)
@@ -171,9 +185,13 @@ public sealed class ReminderEngine : IDisposable
         Changed?.Invoke();
     }
 
-    // A locked screen counts as standing: locking while a stand prompt is pending starts the
-    // stand break, and a lock at least as long as the stand duration restarts the sit cycle.
-    // Shorter locks leave the previous timing untouched (a standing break keeps accruing).
+    // What a lock means depends on AppSettings.LockMode (see LockBehavior):
+    // standing - locking while a prompt is pending answers it, and a lock at least as long as the
+    //            stand duration restarts the sit cycle; shorter locks keep the previous timing.
+    // sitting  - locking ends a standing break and the locked time adds to the sitting timer.
+    // continue - the current phase keeps counting while locked.
+    // pause    - nothing counts while locked.
+    // reset    - every unlock starts a fresh sitting period.
     public void OnSessionLocked()
     {
         if (IsLocked)
@@ -183,12 +201,15 @@ public sealed class ReminderEngine : IDisposable
 
         IsLocked = true;
         _lockStartUtc = DateTime.UtcNow;
-        switch (Phase)
+        switch (LockMode)
         {
-            case Phase.StandPrompt:
+            case LockBehavior.Standing when Phase == Phase.StandPrompt:
                 Enter(Phase.Standing, TimeSpan.Zero);
                 break;
-            case Phase.SitPrompt:
+            case LockBehavior.Standing or LockBehavior.Sitting when Phase == Phase.SitPrompt:
+                Enter(Phase.Sitting, TimeSpan.Zero);
+                break;
+            case LockBehavior.Sitting when Phase == Phase.Standing:
                 Enter(Phase.Sitting, TimeSpan.Zero);
                 break;
         }
@@ -205,6 +226,17 @@ public sealed class ReminderEngine : IDisposable
         IsLocked = false;
         _last = _clock.Elapsed;
         var lockDuration = DateTime.UtcNow - _lockStartUtc;
+
+        if (LockMode == LockBehavior.Reset)
+        {
+            Enter(Phase.Sitting, TimeSpan.Zero);
+            return;
+        }
+        if (LockMode != LockBehavior.Standing)
+        {
+            Changed?.Invoke();
+            return;
+        }
 
         if (Phase == Phase.Standing)
         {

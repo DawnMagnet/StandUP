@@ -52,7 +52,7 @@ public sealed partial class OverlayWindow : Window
         PrimaryText.Text = Loc.Reminder(stand ? settings.StandConfirm : settings.SitConfirm, stand ? "overlay.stand.confirm" : "overlay.sit.confirm", settings);
         SecondaryText.Text = Loc.Reminder(stand ? settings.StandSnooze : settings.SitSnooze, stand ? "overlay.stand.snooze" : "overlay.sit.snooze", settings);
         SecondaryButton.Visibility = settings.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
-        HintText.Text = Loc.T("overlay.hint");
+        HintText.Text = Loc.T($"lock.{settings.LockMode}.short");
         BrandIcon.Source = new BitmapImage(new Uri(AppHost.IconPath));
         if (closePreview is not null)
         {

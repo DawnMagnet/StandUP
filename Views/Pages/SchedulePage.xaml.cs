@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using StandUP.Services;
@@ -28,6 +29,7 @@ public sealed partial class SchedulePage : Page
         SitSegment.Background = Palette.Gradient(Palette.Sit);
         StandSegment.Background = Palette.Gradient(Palette.Stand);
         BuildPresets();
+        BuildLockModes();
         Load();
     }
 
@@ -53,10 +55,30 @@ public sealed partial class SchedulePage : Page
                 Content = content,
                 Style = (Style)Application.Current.Resources["PresetButtonStyle"],
             };
+            AutomationProperties.SetName(button, $"{Loc.T(preset.Key)} {preset.Sit} / {preset.Stand}");
             button.Click += (_, _) => ApplyPreset(preset);
             Grid.SetColumn(button, i);
             PresetGrid.Children.Add(button);
             _presetButtons.Add((preset, button));
+        }
+    }
+
+    void BuildLockModes()
+    {
+        foreach (var mode in LockBehavior.All)
+        {
+            var content = new StackPanel { Spacing = 2, Margin = new Thickness(0, 6, 0, 6) };
+            content.Children.Add(new TextBlock { Text = Loc.T($"lock.{mode}") });
+            content.Children.Add(new TextBlock
+            {
+                Text = Loc.T($"lock.{mode}.desc"),
+                Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                TextWrapping = TextWrapping.Wrap,
+            });
+            var button = new RadioButton { Content = content, Tag = mode };
+            AutomationProperties.SetName(button, Loc.T($"lock.{mode}"));
+            LockModeButtons.Items.Add(button);
         }
     }
 
@@ -68,6 +90,7 @@ public sealed partial class SchedulePage : Page
         StandBox.Value = s.StandMinutes;
         SnoozeBox.Value = s.SnoozeMinutes;
         SnoozeSwitch.IsOn = s.AllowSnooze;
+        LockModeButtons.SelectedIndex = Math.Max(0, Array.IndexOf(LockBehavior.All, s.LockMode));
         _loading = false;
         RefreshSummary();
     }
@@ -117,6 +140,16 @@ public sealed partial class SchedulePage : Page
         set((int)Math.Round(args.NewValue));
         _store.Save();
         RefreshSummary();
+    }
+
+    void OnLockModeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || LockModeButtons.SelectedItem is not RadioButton { Tag: string mode })
+        {
+            return;
+        }
+        _store.Current.LockMode = mode;
+        _store.Save();
     }
 
     void OnSnoozeToggled(object sender, RoutedEventArgs e)

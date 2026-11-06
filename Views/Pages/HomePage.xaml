@@ -138,12 +138,12 @@
             </Grid>
 
             <InfoBar
+                x:Name="LockInfo"
                 Margin="0,20,0,0"
                 IsOpen="True"
                 IsClosable="False"
                 Severity="Informational"
-                Title="{c:L Key=home.infoTitle}"
-                Message="{c:L Key=home.info}" />
+                Title="{c:L Key=home.infoTitle}" />
         </StackPanel>
     </ScrollViewer>
 </Page>

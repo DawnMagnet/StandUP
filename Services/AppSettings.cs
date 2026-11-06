@@ -12,6 +12,7 @@ public sealed class AppSettings
     public string Language { get; set; } = Loc.Auto;
     public string Theme { get; set; } = AppTheme.System;
     public string Backdrop { get; set; } = AppBackdrop.MicaAlt;
+    public string LockMode { get; set; } = LockBehavior.Standing;
 
     // User-defined full-screen reminder text; empty means "use the localized default".
     public string StandTitle { get; set; } = string.Empty;
@@ -36,6 +37,10 @@ public sealed class AppSettings
         {
             Theme = AppTheme.System;
         }
+        if (Array.IndexOf(LockBehavior.All, LockMode) < 0)
+        {
+            LockMode = LockBehavior.Standing;
+        }
         if (Backdrop is not (AppBackdrop.Mica or AppBackdrop.MicaAlt or AppBackdrop.Acrylic))
         {
             Backdrop = AppBackdrop.MicaAlt;
@@ -56,6 +61,18 @@ public static class AppTheme
     public const string System = "system";
     public const string Light = "light";
     public const string Dark = "dark";
+}
+
+// How a locked screen affects the timer; ReminderEngine.OnSessionLocked documents each mode.
+public static class LockBehavior
+{
+    public const string Standing = "standing";
+    public const string Sitting = "sitting";
+    public const string Continue = "continue";
+    public const string Pause = "pause";
+    public const string Reset = "reset";
+
+    public static readonly string[] All = [Standing, Sitting, Continue, Pause, Reset];
 }
 
 public static class AppBackdrop

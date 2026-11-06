@@ -92,7 +92,7 @@ public sealed partial class HomePage : Page
         };
         DescriptionText.Text = Loc.T(_engine switch
         {
-            { IsLocked: true } => "home.desc.locked",
+            { IsLocked: true } => $"lock.{AppHost.Settings.Current.LockMode}.short",
             { IsPaused: true } => "home.desc.paused",
             { IsPrompting: true } => "home.desc.prompt",
             { Phase: Phase.Standing } => "home.desc.standing",
@@ -102,6 +102,8 @@ public sealed partial class HomePage : Page
         PauseGlyph.Glyph = _engine.IsPaused ? "\uE768" : "\uE769";
         PauseText.Text = Loc.T(_engine.IsPaused ? "btn.resume" : "btn.pause");
         BreakNowButton.IsEnabled = !_engine.IsPrompting;
+
+        LockInfo.Message = Loc.T($"lock.{AppHost.Settings.Current.LockMode}.desc") + " " + Loc.T("home.trayNote");
 
         var stats = _engine.Stats;
         SitStatText.Text = AppHost.Duration(stats.Sitting);
