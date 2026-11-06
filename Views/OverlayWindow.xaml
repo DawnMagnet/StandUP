@@ -125,7 +125,7 @@
                 <CompositeTransform x:Name="ContentTransform" />
             </StackPanel.RenderTransform>
 
-            <Grid Width="148" Height="148" HorizontalAlignment="Center" Margin="0,0,0,12">
+            <Grid Width="148" Height="148" HorizontalAlignment="Center" Margin="0,0,0,40">
                 <Ellipse x:Name="PulseA" StrokeThickness="2" RenderTransformOrigin="0.5,0.5" Opacity="0">
                     <Ellipse.RenderTransform>
                         <CompositeTransform x:Name="PulseATransform" />
