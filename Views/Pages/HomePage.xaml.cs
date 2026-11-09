@@ -2,32 +2,33 @@ using System.Globalization;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
 using StandUP.Controls;
 using StandUP.Services;
 using Windows.Foundation;
+using Windows.UI;
 
 namespace StandUP.Views.Pages;
 
 public sealed partial class HomePage : Page
 {
-    const double RingSize = 232;
-    const double RingThickness = 16;
-
     readonly ReminderEngine _engine = AppHost.Engine;
     readonly DispatcherQueueTimer _feedbackTimer;
-    (Windows.UI.Color From, Windows.UI.Color To) _palette;
+    (Color From, Color To) _palette;
     (Phase Phase, bool Paused, bool Locked)? _lastState;
     bool? _compact;
     bool _concealing;
+    double _progress;
 
     public HomePage()
     {
         InitializeComponent();
-        SitIconBack.Background = Palette.Gradient(Palette.Sit);
-        StandIconBack.Background = Palette.Gradient(Palette.Stand);
-        BreakIconBack.Background = Palette.Gradient(Palette.Prompt);
-        RemainingText.Text = Loc.T("home.remaining");
+        SitSegment.Background = Palette.Gradient(Palette.Sit);
+        StandSegment.Background = Palette.Gradient(Palette.Stand);
+        SitDot.Fill = Palette.Solid(Palette.Sit.From);
+        StandDot.Fill = Palette.Solid(Palette.Stand.From);
+        MascotShadow.Fill = SoftShadow(Color.FromArgb(255, 6, 74, 43), 0.28);
         _feedbackTimer = DispatcherQueue.CreateTimer();
         _feedbackTimer.Interval = TimeSpan.FromSeconds(4);
         _feedbackTimer.IsRepeating = false;
@@ -65,6 +66,14 @@ public sealed partial class HomePage : Page
             : $"{total / 60:00}:{total % 60:00}";
     }
 
+    static RadialGradientBrush SoftShadow(Color color, double alpha)
+    {
+        var brush = new RadialGradientBrush();
+        brush.GradientStops.Add(new GradientStop { Color = Palette.WithAlpha(color, alpha), Offset = 0 });
+        brush.GradientStops.Add(new GradientStop { Color = Palette.WithAlpha(color, 0), Offset = 1 });
+        return brush;
+    }
+
     void Refresh()
     {
         var state = (_engine.Phase, _engine.IsPaused, _engine.IsLocked);
@@ -86,14 +95,20 @@ public sealed partial class HomePage : Page
         if (palette != _palette)
         {
             _palette = palette;
-            RingArc.Stroke = Palette.Gradient(palette);
-            HeroGlow.Background = Palette.Gradient(palette, 0.20, 0.0);
-            PhaseChip.Background = Palette.Solid(Palette.WithAlpha(palette.From, 0.18));
+            HeroGlow.Fill = SoftShadow(palette.From, 0.16);
+            PhaseChip.Background = Palette.Solid(Palette.WithAlpha(palette.From, 0.14));
             PhaseGlyph.Foreground = Palette.Solid(palette.From);
+            PhaseText.Foreground = Palette.Solid(palette.From);
+            ProgressFill.Background = Palette.Gradient(palette);
         }
 
-        RingArc.Data = Arc(_engine.IsPrompting ? 1 : _engine.Progress);
+        var standing = _engine.Phase is Phase.Standing or Phase.SitPrompt;
         CountdownText.Text = _engine.IsPrompting ? "--:--" : FormatSpan(_engine.Remaining);
+        CountdownSuffix.Text = _engine switch
+        {
+            { IsLocked: true } or { IsPaused: true } or { IsPrompting: true } => string.Empty,
+            _ => Loc.T(standing ? "home.until.sit" : "home.until.stand"),
+        };
 
         PhaseText.Text = Loc.T(_engine switch
         {
@@ -112,35 +127,35 @@ public sealed partial class HomePage : Page
             _ => "\uE7F4",
         };
 
-        var next = _engine.NextReminderAt?.ToString("t", culture);
+        var next = _engine.NextReminderAt?.ToString("t", culture) ?? string.Empty;
         HeadlineText.Text = _engine switch
         {
-            { IsLocked: true } => Loc.T("home.lockedTitle"),
-            { IsPaused: true } => Loc.T("home.pausedTitle"),
-            { IsPrompting: true } => Loc.T("home.promptTitle"),
-            { Phase: Phase.Standing } => Loc.F("home.nextSit", next ?? string.Empty),
-            _ => Loc.F("home.nextStand", next ?? string.Empty),
+            { IsLocked: true } => Loc.T($"lock.{AppHost.Settings.Current.LockMode}.short"),
+            { IsPaused: true } => Loc.T("home.desc.paused"),
+            { IsPrompting: true } => Loc.T("home.desc.prompt"),
+            { Phase: Phase.Standing } => Loc.F("home.next.standing", next),
+            _ => Loc.F("home.next.sitting", next, AppHost.Settings.Current.StandMinutes),
         };
-        DescriptionText.Text = Loc.T(_engine switch
-        {
-            { IsLocked: true } => $"lock.{AppHost.Settings.Current.LockMode}.short",
-            { IsPaused: true } => "home.desc.paused",
-            { IsPrompting: true } => "home.desc.prompt",
-            { Phase: Phase.Standing } => "home.desc.standing",
-            _ => "home.desc.sitting",
-        });
+
+        _progress = _engine.IsPrompting ? 1 : _engine.Progress;
+        UpdateProgressFill();
+        ProgressDone.Text = Loc.F(standing ? "home.progress.stood" : "home.progress.sat", AppHost.Duration(_engine.Elapsed));
+        ProgressTotal.Text = Loc.F("home.progress.total", (int)_engine.PhaseDuration.TotalMinutes);
 
         PauseGlyph.Glyph = _engine.IsPaused ? "\uE768" : "\uE769";
         PauseText.Text = Loc.T(_engine.IsPaused ? "btn.resume" : "btn.pause");
         BreakNowButton.IsEnabled = !_engine.IsPrompting;
 
-        LockInfo.Message = Loc.T($"lock.{AppHost.Settings.Current.LockMode}.desc")
-            + (Loc.Current == Loc.ZhCN ? string.Empty : " ") + Loc.T("home.trayNote");
-
         var stats = _engine.Stats;
-        SitStatText.Text = AppHost.Duration(stats.Sitting);
-        StandStatText.Text = AppHost.Duration(stats.Standing);
-        BreakStatText.Text = stats.Breaks.ToString(CultureInfo.InvariantCulture);
+        SetDuration(SitStatText, stats.Sitting);
+        SetDuration(StandStatText, stats.Standing);
+        SetValue(BreakStatText, stats.Breaks.ToString(CultureInfo.InvariantCulture), string.Empty);
+        var total = stats.SittingSeconds + stats.StandingSeconds;
+        var share = total > 0 ? stats.StandingSeconds / total : 0;
+        SitShare.Width = new GridLength(total > 0 ? Math.Max(stats.SittingSeconds, total * 0.02) : 1, GridUnitType.Star);
+        StandShare.Width = new GridLength(total > 0 ? Math.Max(stats.StandingSeconds, total * 0.02) : 1, GridUnitType.Star);
+        SitSegment.Opacity = StandSegment.Opacity = total > 0 ? 1 : 0.25;
+        ShareStatText.Text = $"{Math.Round(share * 100):0}%";
 
         HeroMascot.State = _engine switch
         {
@@ -156,7 +171,6 @@ public sealed partial class HomePage : Page
             if (!_engine.IsLocked && previous!.Value.Phase == Phase.StandPrompt && _engine.Phase == Phase.Standing)
             {
                 ShowFeedback("home.feedback.standing", "\uE73E");
-                UiMotion.Emphasize(BreakIconBack);
             }
             else if (!_engine.IsLocked && previous!.Value.Phase == Phase.SitPrompt && _engine.Phase == Phase.Sitting)
             {
@@ -165,24 +179,70 @@ public sealed partial class HomePage : Page
         }
     }
 
+    // A large number followed by its unit in the label size, e.g. "1 h 16 min".
+    static void SetDuration(TextBlock target, TimeSpan span)
+    {
+        var minutes = (int)span.TotalMinutes;
+        target.Inlines.Clear();
+        if (minutes >= 60)
+        {
+            AddRuns(target, (minutes / 60).ToString(CultureInfo.InvariantCulture), Loc.T("unit.h"));
+            target.Inlines.Add(new Run { Text = " " });
+        }
+        AddRuns(target, (minutes % 60 == 0 && minutes >= 60 ? 0 : minutes % 60).ToString(CultureInfo.InvariantCulture), Loc.T("unit.min"));
+    }
+
+    static void SetValue(TextBlock target, string value, string unit)
+    {
+        target.Inlines.Clear();
+        AddRuns(target, value, unit);
+    }
+
+    static void AddRuns(TextBlock target, string value, string unit)
+    {
+        target.Inlines.Add(new Run { Text = value });
+        if (unit.Length > 0)
+        {
+            target.Inlines.Add(new Run
+            {
+                Text = (Loc.Current == Loc.ZhCN ? string.Empty : " ") + unit,
+                FontSize = 14,
+                FontWeight = Microsoft.UI.Text.FontWeights.Normal,
+                FontFamily = new FontFamily("Segoe UI Variable Text"),
+                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            });
+        }
+    }
+
+    void OnProgressTrackSizeChanged(object sender, SizeChangedEventArgs e) => UpdateProgressFill();
+
+    void UpdateProgressFill()
+    {
+        var width = ProgressTrack.ActualWidth;
+        // Keep a visible pill even at the very start.
+        ProgressFill.Width = width <= 0 ? 0 : Math.Max(ProgressTrack.ActualHeight, width * Math.Clamp(_progress, 0, 1));
+        ProgressFill.Visibility = _progress > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     void OnHeroSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var compact = e.NewSize.Width < 740;
+        var compact = e.NewSize.Width < 700;
         if (_compact == compact) return;
         _compact = compact;
-        HeroContent.ColumnSpacing = compact ? 0 : 32;
-        HeroContent.RowSpacing = compact ? 24 : 0;
+        HeroContent.ColumnSpacing = compact ? 0 : 36;
+        HeroContent.RowSpacing = compact ? 20 : 0;
         Grid.SetColumn(HeroDetails, compact ? 0 : 1);
         Grid.SetRow(HeroDetails, compact ? 1 : 0);
         Grid.SetColumnSpan(HeroDetails, compact ? 2 : 1);
-        Grid.SetColumnSpan(TimerVisual, compact ? 2 : 1);
-        TimerVisual.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        Grid.SetColumnSpan(MascotStage, compact ? 2 : 1);
+        MascotStage.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
         ActionButtons.Orientation = compact ? Orientation.Vertical : Orientation.Horizontal;
         foreach (var button in ActionButtons.Children.OfType<Button>())
         {
             button.HorizontalAlignment = compact ? HorizontalAlignment.Stretch : HorizontalAlignment.Left;
             button.HorizontalContentAlignment = HorizontalAlignment.Center;
         }
+        StatsRow.ColumnSpacing = compact ? 24 : 44;
     }
 
     void ShowFeedback(string key, string glyph)
@@ -199,32 +259,6 @@ public sealed partial class HomePage : Page
         }
         _feedbackTimer.Stop();
         _feedbackTimer.Start();
-    }
-
-    static Geometry? Arc(double progress)
-    {
-        if (progress <= 0.0005)
-        {
-            return null;
-        }
-        var radius = (RingSize - RingThickness) / 2;
-        var center = RingSize / 2;
-        if (progress >= 0.9995)
-        {
-            return new EllipseGeometry { Center = new Point(center, center), RadiusX = radius, RadiusY = radius };
-        }
-        var angle = progress * 2 * Math.PI;
-        var figure = new PathFigure { StartPoint = new Point(center, center - radius), IsClosed = false };
-        figure.Segments.Add(new ArcSegment
-        {
-            Point = new Point(center + radius * Math.Sin(angle), center - radius * Math.Cos(angle)),
-            Size = new Size(radius, radius),
-            IsLargeArc = angle > Math.PI,
-            SweepDirection = SweepDirection.Clockwise,
-        });
-        var geometry = new PathGeometry();
-        geometry.Figures.Add(figure);
-        return geometry;
     }
 
     void OnBreakNowClick(object sender, RoutedEventArgs e) => _engine.BreakNow();

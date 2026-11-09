@@ -9,9 +9,30 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="TrackFillBrush" Color="#FFE8EDEB" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="TrackFillBrush" Color="#26FFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="TrackFillBrush" Color="{ThemeResource SystemColorGrayTextColor}" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <x:Double x:Key="PageMaxWidth">1040</x:Double>
             <Thickness x:Key="PagePadding">40,12,40,40</Thickness>
-            <CornerRadius x:Key="HeroCornerRadius">16</CornerRadius>
+            <CornerRadius x:Key="HeroCornerRadius">14</CornerRadius>
+
+            <!-- Brand accent: the mascot's mint green replaces the Windows accent across every control. -->
+            <Color x:Key="SystemAccentColor">#FF16A36A</Color>
+            <Color x:Key="SystemAccentColorLight1">#FF2DBA7E</Color>
+            <Color x:Key="SystemAccentColorLight2">#FF52CF97</Color>
+            <Color x:Key="SystemAccentColorLight3">#FF86E2B7</Color>
+            <Color x:Key="SystemAccentColorDark1">#FF128C5A</Color>
+            <Color x:Key="SystemAccentColorDark2">#FF0D7149</Color>
+            <Color x:Key="SystemAccentColorDark3">#FF085637</Color>
 
             <Style x:Key="MascotButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />

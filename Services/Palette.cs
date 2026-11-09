@@ -7,8 +7,8 @@ namespace StandUP.Services;
 // Phase colors shared by the dashboard, the title bar status pill and the full-screen reminders.
 public static class Palette
 {
-    public static readonly (Color From, Color To) Sit = (Color.FromArgb(255, 79, 139, 255), Color.FromArgb(255, 139, 92, 246));
-    public static readonly (Color From, Color To) Stand = (Color.FromArgb(255, 16, 185, 129), Color.FromArgb(255, 6, 182, 212));
+    public static readonly (Color From, Color To) Sit = (Color.FromArgb(255, 108, 124, 245), Color.FromArgb(255, 139, 92, 246));
+    public static readonly (Color From, Color To) Stand = (Color.FromArgb(255, 22, 163, 106), Color.FromArgb(255, 45, 201, 138));
     public static readonly (Color From, Color To) Prompt = (Color.FromArgb(255, 251, 146, 60), Color.FromArgb(255, 236, 72, 153));
     public static readonly (Color From, Color To) Idle = (Color.FromArgb(255, 148, 163, 184), Color.FromArgb(255, 100, 116, 139));
 

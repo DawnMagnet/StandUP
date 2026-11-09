@@ -1,0 +1,148 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif; background: #d9dde3; padding: 28px; display: flex; gap: 28px; flex-wrap: wrap; }
+  .label { font: 600 15px "Segoe UI Variable Display", "Microsoft YaHei UI"; color: #222; margin: 0 0 10px 4px; }
+  .win { width: 1100px; height: 760px; border-radius: 10px; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+  .titlebar { height: 48px; display: flex; align-items: center; padding: 0 16px; gap: 12px; font-size: 13px; color: #333; }
+  .titlebar .logo { width: 18px; height: 18px; border-radius: 5px; background: url(../Assets/Mascot/frame-01.png) center/cover; }
+  .titlebar .sub { color: #777; }
+  .pill { margin-left: auto; margin-right: 140px; display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 99px; font-size: 13px; }
+  .pill i { width: 8px; height: 8px; border-radius: 50%; }
+  .caption { width: 140px; display: flex; justify-content: space-around; color: #555; font-size: 14px; position: absolute; right: 16px; }
+  .main { flex: 1; display: flex; }
+  .nav { width: 220px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+  .nav div { padding: 9px 12px; border-radius: 6px; display: flex; gap: 14px; align-items: center; color: #222; position: relative; }
+  .nav .on::before { content: ""; position: absolute; left: 0; top: 11px; bottom: 11px; width: 3px; border-radius: 3px; }
+  .nav .ico { width: 16px; height: 16px; border: 1.6px solid #444; border-radius: 4px; }
+  .nav .bottom { margin-top: auto; }
+  .page { flex: 1; border-top-left-radius: 8px; padding: 26px 36px; overflow: hidden; }
+  .greet { font: 600 28px "Segoe UI Variable Display", "Microsoft YaHei UI"; letter-spacing: .2px; }
+  .date { font-size: 13px; margin-top: 2px; }
+  .num { font-family: "Segoe UI Variable Display", "Segoe UI"; font-variant-numeric: tabular-nums; }
+  .btn { height: 34px; padding: 0 16px; border-radius: 6px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+
+  /* ---------- A: Mint calm ---------- */
+  .a { background: #eef3f0; }
+  .a .titlebar { background: transparent; }
+  .a .pill { background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+  .a .nav .on { background: rgba(0,0,0,.05); font-weight: 600; }
+  .a .nav .on::before { background: #16a36a; }
+  .a .page { background: #f8faf9; box-shadow: inset 1px 1px 0 rgba(0,0,0,.05); }
+  .a .date { color: #6b7570; }
+  .a .hero { margin-top: 18px; background: #fff; border-radius: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 0 0 1px rgba(0,0,0,.05); padding: 26px 30px; display: flex; gap: 34px; align-items: center; position: relative; overflow: hidden; }
+  .a .hero::after { content: ""; position: absolute; right: -120px; top: -140px; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(91,108,240,.13), rgba(91,108,240,0) 70%); }
+  .a .mascot { width: 176px; height: 176px; border-radius: 34px; background: url(../Assets/Mascot/frame-01.png) center/cover; box-shadow: 0 10px 24px rgba(10,90,50,.22); flex: none; }
+  .a .chip { display: inline-flex; gap: 6px; align-items: center; background: #eef0fe; color: #4453d6; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+  .a .count { font-size: 68px; font-weight: 600; line-height: 1; margin: 12px 0 6px; color: #121614; letter-spacing: -1px; }
+  .a .count small { font: 500 15px "Segoe UI Variable Text", "Microsoft YaHei UI"; color: #6b7570; letter-spacing: 0; margin-left: 8px; }
+  .a .next { font-size: 15px; color: #3b4440; }
+  .a .bar { margin: 18px 0 8px; height: 8px; border-radius: 8px; background: #edf0ef; overflow: hidden; width: 520px; }
+  .a .bar b { display: block; width: 18%; height: 100%; border-radius: 8px; background: linear-gradient(90deg, #6c7cf5, #8b5cf6); }
+  .a .barlab { font-size: 12px; color: #7b8580; width: 520px; display: flex; justify-content: space-between; }
+  .a .actions { margin-top: 20px; display: flex; gap: 8px; }
+  .a .primary { background: #16a36a; color: #fff; font-weight: 600; box-shadow: inset 0 -1px 0 rgba(0,0,0,.15); }
+  .a .secondary { background: #fff; color: #1f2522; box-shadow: 0 0 0 1px rgba(0,0,0,.1), 0 1px 0 rgba(0,0,0,.05); }
+  .a .ghost { color: #3b4440; }
+  .a .section { font: 600 15px "Segoe UI Variable Text", "Microsoft YaHei UI"; margin: 26px 0 10px 2px; color: #1f2522; }
+  .a .today { background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.05); padding: 20px 24px; }
+  .a .split { height: 12px; border-radius: 12px; display: flex; overflow: hidden; gap: 3px; }
+  .a .split .s { background: #6c7cf5; width: 38%; border-radius: 12px; }
+  .a .split .t { background: #19b36b; width: 62%; border-radius: 12px; }
+  .a .stats { display: flex; gap: 44px; margin-top: 16px; }
+  .a .stat .v { font-size: 26px; font-weight: 600; color: #121614; }
+  .a .stat .v span { font: 500 14px "Segoe UI Variable Text", "Microsoft YaHei UI"; color: #6b7570; margin-left: 3px; }
+  .a .stat .k { font-size: 13px; color: #6b7570; display: flex; gap: 7px; align-items: center; margin-top: 2px; }
+  .a .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .a .ratio { margin-left: auto; text-align: right; }
+  .a .ratio .v { color: #16a36a; }
+
+  /* ---------- B: Hero illustration ---------- */
+  .b { background: #f2f2f5; }
+  .b .pill { background: rgba(255,255,255,.75); box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+  .b .nav .on { background: rgba(0,0,0,.05); font-weight: 600; }
+  .b .nav .on::before { background: #16a36a; }
+  .b .page { background: #fafafb; box-shadow: inset 1px 1px 0 rgba(0,0,0,.05); padding: 0; }
+  .b .heroB { height: 330px; position: relative; overflow: hidden; background: radial-gradient(120% 140% at 85% 10%, #8f9bff 0%, #5b6cf0 38%, #3f3bb8 100%); color: #fff; padding: 30px 40px; }
+  .b .heroB::before { content: ""; position: absolute; left: -80px; bottom: -160px; width: 520px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,0) 70%); }
+  .b .heroB .greet { color: #fff; }
+  .b .heroB .date { color: rgba(255,255,255,.75); }
+  .b .mascotB { position: absolute; right: 56px; bottom: 34px; width: 240px; height: 240px; border-radius: 52px; background: url(../Assets/Mascot/frame-01.png) center/cover; box-shadow: 0 24px 50px rgba(20,10,80,.45), 0 0 0 6px rgba(255,255,255,.18); }
+  .b .countB { font-size: 92px; font-weight: 600; line-height: 1; margin-top: 30px; letter-spacing: -2px; }
+  .b .nextB { font-size: 16px; color: rgba(255,255,255,.88); margin-top: 8px; }
+  .b .actionsB { position: absolute; left: 40px; bottom: 30px; display: flex; gap: 8px; }
+  .b .white { background: #fff; color: #3f3bb8; font-weight: 600; }
+  .b .glass { background: rgba(255,255,255,.16); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); }
+  .b .ringB { position: absolute; left: 40px; top: 120px; }
+  .b .cards { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; padding: 22px 40px; }
+  .b .card { background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px rgba(0,0,0,.05); padding: 18px 20px; }
+  .b .card .k { font-size: 13px; color: #6b6b75; }
+  .b .card .v { font-size: 30px; font-weight: 600; margin-top: 6px; color: #15151a; }
+  .b .card .v span { font: 500 14px "Segoe UI Variable Text", "Microsoft YaHei UI"; color: #6b6b75; margin-left: 3px; }
+  .b .week { display: flex; align-items: flex-end; gap: 8px; height: 46px; margin-top: 12px; }
+  .b .week i { flex: 1; border-radius: 4px; background: linear-gradient(#19b36b, #13a05e); }
+  .b .week i.s { background: #dfe2fb; }
+</style></head>
+<body>
+<div>
+  <div class="label">方案 A · 清爽卡片：统一薄荷绿品牌色，倒计时为主角，进度条代替圆环</div>
+  <div class="win a">
+    <div class="titlebar"><span class="logo"></span>StandUP <span class="sub">少坐一点，多动一点</span>
+      <span class="pill"><i style="background:#6c7cf5"></i>久坐中 <b class="num">40:43</b></span></div>
+    <div class="main">
+      <div class="nav"><div class="on"><span class="ico"></span>概览</div><div><span class="ico"></span>作息</div><div><span class="ico"></span>提醒</div><div class="bottom"><span class="ico" style="border-radius:50%"></span>设置</div></div>
+      <div class="page">
+        <div class="greet">早上好</div><div class="date">2026年11月9日 星期一</div>
+        <div class="hero">
+          <div class="mascot"></div>
+          <div>
+            <span class="chip">● 久坐中</span>
+            <div class="count num">40:43<small>后提醒站起来</small></div>
+            <div class="next">10:19 会全屏提醒你起身活动 15 分钟</div>
+            <div class="bar"><b></b></div>
+            <div class="barlab"><span>已坐 9 分钟</span><span>共 50 分钟</span></div>
+            <div class="actions"><span class="btn primary">立即休息</span><span class="btn secondary">暂停</span><span class="btn ghost">重新计时</span></div>
+          </div>
+        </div>
+        <div class="section">今日</div>
+        <div class="today">
+          <div class="split"><span class="s"></span><span class="t"></span></div>
+          <div class="stats">
+            <div class="stat"><div class="v num">9<span>分钟</span></div><div class="k"><i class="dot" style="background:#6c7cf5"></i>久坐</div></div>
+            <div class="stat"><div class="v num">15<span>分钟</span></div><div class="k"><i class="dot" style="background:#19b36b"></i>站立</div></div>
+            <div class="stat"><div class="v num">1<span>次</span></div><div class="k">休息</div></div>
+            <div class="stat ratio"><div class="v num">62%</div><div class="k" style="justify-content:flex-end">站立占比</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="label">方案 B · 插画主视觉：阶段色大横幅，小人放大做主角，下方信息卡</div>
+  <div class="win b">
+    <div class="titlebar"><span class="logo"></span>StandUP <span class="sub">少坐一点，多动一点</span>
+      <span class="pill"><i style="background:#6c7cf5"></i>久坐中 <b class="num">40:43</b></span></div>
+    <div class="main">
+      <div class="nav"><div class="on"><span class="ico"></span>概览</div><div><span class="ico"></span>作息</div><div><span class="ico"></span>提醒</div><div class="bottom"><span class="ico" style="border-radius:50%"></span>设置</div></div>
+      <div class="page">
+        <div class="heroB">
+          <div class="greet">早上好</div><div class="date">2026年11月9日 星期一 · 久坐中</div>
+          <div class="countB num">40:43</div>
+          <div class="nextB">10:19 提醒你站起来活动 15 分钟</div>
+          <div class="actionsB"><span class="btn white">立即休息</span><span class="btn glass">暂停</span><span class="btn glass">重新计时</span></div>
+          <div class="mascotB"></div>
+        </div>
+        <div class="cards">
+          <div class="card"><div class="k">今天的坐站节奏</div>
+            <div class="week"><i class="s" style="height:60%"></i><i style="height:35%"></i><i class="s" style="height:90%"></i><i style="height:40%"></i><i class="s" style="height:20%"></i><i style="height:15%;opacity:.35"></i><i class="s" style="height:10%;opacity:.35"></i></div></div>
+          <div class="card"><div class="k">久坐</div><div class="v num">9<span>分钟</span></div><div class="k" style="margin-top:6px">站立 15 分钟</div></div>
+          <div class="card"><div class="k">休息</div><div class="v num">1<span>次</span></div><div class="k" style="margin-top:6px">站立占比 62%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -6,23 +6,43 @@
     xmlns:c="using:StandUP.Controls"
     Background="Transparent">
 
+    <Page.Resources>
+        <Style x:Key="StatValueStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LineHeight" Value="32" />
+        </Style>
+        <Style x:Key="StatLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+    </Page.Resources>
+
     <Grid>
         <ScrollViewer>
             <StackPanel x:Name="PageContent" MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
 
-                <StackPanel Margin="0,4,0,20" Spacing="2">
+                <StackPanel Margin="0,4,0,18" Spacing="2">
                     <TextBlock x:Name="GreetingText" Style="{StaticResource TitleTextBlockStyle}" />
                     <TextBlock x:Name="DateText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
 
-                <!-- Hero: progress ring and the current phase. -->
+                <!-- Hero: the mascot, the countdown as the headline, and a progress bar. -->
                 <Grid
                     CornerRadius="{StaticResource HeroCornerRadius}"
                     BorderThickness="1"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                    <Border x:Name="HeroGlow" CornerRadius="{StaticResource HeroCornerRadius}" />
-                    <Grid x:Name="HeroContent" Padding="28" ColumnSpacing="32" SizeChanged="OnHeroSizeChanged">
+                    <Ellipse
+                        x:Name="HeroGlow"
+                        Width="460"
+                        Height="460"
+                        Margin="0,-190,-150,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        IsHitTestVisible="False" />
+                    <Grid x:Name="HeroContent" Padding="28,26,32,26" ColumnSpacing="36" SizeChanged="OnHeroSizeChanged">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -32,62 +52,73 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Grid x:Name="TimerVisual" Width="232" Height="232" VerticalAlignment="Center">
-                            <Ellipse
-                                StrokeThickness="16"
-                                Stroke="{ThemeResource ControlStrokeColorDefaultBrush}"
-                                Opacity="0.9" />
-                            <Path x:Name="RingArc" StrokeThickness="16" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
-                                <c:StandupMascot x:Name="HeroMascot" Width="108" Height="108" Margin="0,0,0,4" />
-                                <TextBlock
-                                    x:Name="CountdownText"
-                                    FontFamily="Segoe UI Variable Display"
-                                    FontSize="40"
-                                    FontWeight="SemiBold"
-                                    HorizontalAlignment="Center" />
-                                <TextBlock
-                                    x:Name="RemainingText"
-                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    HorizontalAlignment="Center" />
-                            </StackPanel>
+                        <Grid x:Name="MascotStage" Width="176" Height="194" VerticalAlignment="Center">
+                            <Ellipse x:Name="MascotShadow" Width="150" Height="26" VerticalAlignment="Bottom" />
+                            <c:StandupMascot x:Name="HeroMascot" Width="176" Height="176" VerticalAlignment="Top" />
                         </Grid>
 
-                        <StackPanel x:Name="HeroDetails" Grid.Column="1" VerticalAlignment="Center" Spacing="10">
+                        <StackPanel x:Name="HeroDetails" Grid.Column="1" VerticalAlignment="Center">
                             <Border
                                 x:Name="PhaseChip"
                                 HorizontalAlignment="Left"
-                                Padding="12,4,14,4"
+                                Padding="10,3,12,4"
                                 CornerRadius="12">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon x:Name="PhaseGlyph" FontSize="14" VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <FontIcon x:Name="PhaseGlyph" FontSize="12" VerticalAlignment="Center" />
                                     <TextBlock x:Name="PhaseText" Style="{StaticResource CaptionTextBlockStyle}" FontWeight="SemiBold" />
                                 </StackPanel>
                             </Border>
-                            <TextBlock x:Name="HeadlineText" Style="{StaticResource SubtitleTextBlockStyle}" FontSize="26" TextWrapping="Wrap" />
-                            <TextBlock
-                                x:Name="DescriptionText"
-                                TextWrapping="Wrap"
-                                MaxWidth="460"
-                                HorizontalAlignment="Left"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <StackPanel x:Name="ActionButtons" Orientation="Horizontal" Spacing="8" Margin="0,14,0,0">
-                                <Button x:Name="BreakNowButton" Style="{StaticResource AccentButtonStyle}" Click="OnBreakNowClick" Padding="16,8">
+
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,6">
+                                <TextBlock
+                                    x:Name="CountdownText"
+                                    FontFamily="Segoe UI Variable Display"
+                                    FontSize="66"
+                                    FontWeight="SemiBold"
+                                    CharacterSpacing="-20"
+                                    LineHeight="72"
+                                    LineStackingStrategy="BlockLineHeight" />
+                                <TextBlock
+                                    x:Name="CountdownSuffix"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,12"
+                                    FontSize="15"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <TextBlock x:Name="HeadlineText" FontSize="15" TextWrapping="Wrap" MaxWidth="540" HorizontalAlignment="Left" />
+
+                            <StackPanel x:Name="ProgressPanel" MaxWidth="540" HorizontalAlignment="Stretch" Margin="0,18,0,0" Spacing="8">
+                                <Grid
+                                    x:Name="ProgressTrack"
+                                    Height="8"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource TrackFillBrush}"
+                                    SizeChanged="OnProgressTrackSizeChanged">
+                                    <Border x:Name="ProgressFill" CornerRadius="4" HorizontalAlignment="Left" Width="0" />
+                                </Grid>
+                                <Grid>
+                                    <TextBlock x:Name="ProgressDone" Style="{StaticResource StatLabelStyle}" FontSize="12" />
+                                    <TextBlock x:Name="ProgressTotal" Style="{StaticResource StatLabelStyle}" FontSize="12" HorizontalAlignment="Right" />
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel x:Name="ActionButtons" Orientation="Horizontal" Spacing="8" Margin="0,20,0,0">
+                                <Button x:Name="BreakNowButton" Style="{StaticResource AccentButtonStyle}" Click="OnBreakNowClick" Padding="16,7">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE7EE;" FontSize="16" />
-                                        <TextBlock Text="{c:L Key=btn.breakNow}" />
+                                        <FontIcon Glyph="&#xE7EE;" FontSize="15" />
+                                        <TextBlock Text="{c:L Key=btn.breakNow}" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="PauseButton" Click="OnPauseClick" Padding="16,8">
+                                <Button x:Name="PauseButton" Click="OnPauseClick" Padding="16,7">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon x:Name="PauseGlyph" FontSize="16" />
+                                        <FontIcon x:Name="PauseGlyph" FontSize="15" />
                                         <TextBlock x:Name="PauseText" />
                                     </StackPanel>
                                 </Button>
-                                <Button Click="OnRestartClick" Padding="16,8">
+                                <Button Click="OnRestartClick" Padding="14,7" Background="Transparent" BorderBrush="Transparent">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE72C;" FontSize="16" />
+                                        <FontIcon Glyph="&#xE72C;" FontSize="15" />
                                         <TextBlock Text="{c:L Key=btn.restart}" />
                                     </StackPanel>
                                 </Button>
@@ -96,56 +127,50 @@
                     </Grid>
                 </Grid>
 
-
+                <!-- Today: how the day splits between sitting and standing. -->
                 <TextBlock Text="{c:L Key=home.today}" Style="{StaticResource SectionHeaderStyle}" />
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Style="{StaticResource CardBorderStyle}">
-                        <StackPanel Spacing="12">
-                            <Border x:Name="SitIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
-                                <FontIcon Glyph="&#xE7F4;" FontSize="18" Foreground="White" />
-                            </Border>
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="SitStatText" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
-                                <TextBlock Text="{c:L Key=stats.sitting}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Border Style="{StaticResource CardBorderStyle}" CornerRadius="{StaticResource HeroCornerRadius}" Padding="24,20,24,18">
+                    <StackPanel Spacing="16">
+                        <Grid x:Name="SplitBar" Height="12" ColumnSpacing="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition x:Name="SitShare" Width="1*" />
+                                <ColumnDefinition x:Name="StandShare" Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="SitSegment" CornerRadius="6" />
+                            <Border x:Name="StandSegment" Grid.Column="1" CornerRadius="6" />
+                        </Grid>
+                        <Grid x:Name="StatsRow" ColumnSpacing="44" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock x:Name="SitStatText" Style="{StaticResource StatValueStyle}" />
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Ellipse x:Name="SitDot" Width="8" Height="8" VerticalAlignment="Center" />
+                                    <TextBlock Text="{c:L Key=stats.sitting}" Style="{StaticResource StatLabelStyle}" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}">
-                        <StackPanel Spacing="12">
-                            <Border x:Name="StandIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
-                                <FontIcon Glyph="&#xE805;" FontSize="18" Foreground="White" />
-                            </Border>
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="StandStatText" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
-                                <TextBlock Text="{c:L Key=stats.standing}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock x:Name="StandStatText" Style="{StaticResource StatValueStyle}" />
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Ellipse x:Name="StandDot" Width="8" Height="8" VerticalAlignment="Center" />
+                                    <TextBlock Text="{c:L Key=stats.standing}" Style="{StaticResource StatLabelStyle}" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
-                        <StackPanel Spacing="12">
-                            <Border x:Name="BreakIconBack" Width="40" Height="40" CornerRadius="20" HorizontalAlignment="Left">
-                                <FontIcon Glyph="&#xE734;" FontSize="18" Foreground="White" />
-                            </Border>
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="BreakStatText" Style="{StaticResource SubtitleTextBlockStyle}" />
-                                <TextBlock Text="{c:L Key=stats.breaks}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <StackPanel Grid.Column="2">
+                                <TextBlock x:Name="BreakStatText" Style="{StaticResource StatValueStyle}" />
+                                <TextBlock Text="{c:L Key=stats.breaks}" Style="{StaticResource StatLabelStyle}" />
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <InfoBar
-                    x:Name="LockInfo"
-                    Margin="0,20,0,0"
-                    IsOpen="True"
-                    IsClosable="False"
-                    Severity="Informational"
-                    Title="{c:L Key=home.infoTitle}" />
+                            <StackPanel x:Name="ShareStat" Grid.Column="3" HorizontalAlignment="Right">
+                                <TextBlock x:Name="ShareStatText" Style="{StaticResource StatValueStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{c:L Key=home.standShare}" Style="{StaticResource StatLabelStyle}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
