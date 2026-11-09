@@ -2,8 +2,10 @@ using System.Globalization;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using StandUP.Controls;
 using StandUP.Services;
 using Windows.UI;
 using WinRT.Interop;
@@ -16,6 +18,10 @@ public sealed partial class OverlayWindow : Window
     readonly Phase _phase;
     readonly Action? _closePreview;
     readonly DispatcherQueueTimer _clock;
+    readonly CancellationTokenSource _lifetime = new();
+    bool _resolving;
+    bool _closed;
+    bool _motionSubscribed;
 
     public bool AllowClose { get; set; }
 
@@ -45,7 +51,7 @@ public sealed partial class OverlayWindow : Window
         var palette = stand ? Palette.Prompt : Palette.Stand;
         ApplyPalette(palette);
 
-        IconGlyph.Glyph = stand ? "\uE805" : "\uE7F4";
+        ReminderMascot.State = stand ? MascotState.Prompt : MascotState.SitPrompt;
         ChipText.Text = Loc.Expand(Loc.T(stand ? "overlay.stand.chip" : "overlay.sit.chip"), settings);
         TitleText.Text = Loc.Reminder(stand ? settings.StandTitle : settings.SitTitle, stand ? "overlay.stand.title" : "overlay.sit.title", settings);
         SubtitleText.Text = Loc.Reminder(stand ? settings.StandMessage : settings.SitMessage, stand ? "overlay.stand.message" : "overlay.sit.message", settings);
@@ -68,12 +74,76 @@ public sealed partial class OverlayWindow : Window
 
         Root.Loaded += (_, _) =>
         {
-            EntranceStoryboard.Begin();
-            PulseStoryboard.Begin();
-            DriftStoryboard.Begin();
+            if (!_motionSubscribed)
+            {
+                UiMotion.AnimationsChanged += OnAnimationsChanged;
+                _motionSubscribed = true;
+            }
+            UpdateLayoutForSize();
+            if (UiMotion.AnimationsEnabled)
+            {
+                EntranceStoryboard.Begin();
+                Pulse.Start();
+                DriftStoryboard.Begin();
+            }
+            else
+            {
+                ContentPanel.Opacity = 1;
+                Glow.Opacity = 1;
+            }
             PrimaryButton.Focus(FocusState.Programmatic);
         };
-        Closed += (_, _) => _clock.Stop();
+        Root.Unloaded += (_, _) =>
+        {
+            UnsubscribeMotion();
+            StopMotion();
+        };
+        Root.SizeChanged += (_, _) => UpdateLayoutForSize();
+        Closed += (_, _) =>
+        {
+            _closed = true;
+            UnsubscribeMotion();
+            _lifetime.Cancel();
+            _clock.Stop();
+            StopMotion();
+            _lifetime.Dispose();
+        };
+    }
+
+    void UnsubscribeMotion()
+    {
+        if (!_motionSubscribed) return;
+        UiMotion.AnimationsChanged -= OnAnimationsChanged;
+        _motionSubscribed = false;
+    }
+
+    void OnAnimationsChanged()
+    {
+        // UISettings raises this event off the UI thread. A queued callback can outlive the window.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_closed || !Root.IsLoaded) return;
+            if (!UiMotion.AnimationsEnabled)
+            {
+                StopMotion();
+            }
+            else if (!_resolving)
+            {
+                // Resume ambient motion without replaying the entrance or an in-flight confirmation.
+                Pulse.Start();
+                DriftStoryboard.Begin();
+            }
+        });
+    }
+
+    void StopMotion()
+    {
+        EntranceStoryboard.Stop();
+        ExitStoryboard.Stop();
+        Pulse.Stop();
+        DriftStoryboard.Stop();
+        ContentPanel.Opacity = Glow.Opacity = 1;
+        ContentTransform.TranslateY = 0;
     }
 
     void UpdateClock() =>
@@ -84,9 +154,7 @@ public sealed partial class OverlayWindow : Window
         GlowWash.Background = Palette.Gradient(palette, 0.22, 0.04);
         OrbA.Fill = Orb(palette.From, 0.50);
         OrbB.Fill = Orb(palette.To, 0.42);
-        IconDisc.Fill = Palette.Gradient(palette);
-        PulseA.Stroke = Palette.Solid(palette.From);
-        PulseB.Stroke = Palette.Solid(palette.To);
+        Pulse.SetColors(palette.From, palette.To);
 
         var accent = Palette.Gradient(palette);
         var accentHover = Palette.Gradient((Lighten(palette.From), Lighten(palette.To)));
@@ -118,31 +186,86 @@ public sealed partial class OverlayWindow : Window
         NativeMethods.SetForegroundWindow(WindowNative.GetWindowHandle(this));
     }
 
-    void OnPrimaryClick(object sender, RoutedEventArgs e)
+    void UpdateLayoutForSize()
     {
+        var compact = Root.ActualHeight < 760;
+        var narrow = Root.ActualWidth < 700;
+        MascotStage.Width = MascotStage.Height = compact ? 140 : 220;
+        MascotStage.Margin = new Thickness(0, 0, 0, compact ? 0 : 12);
+        TitleText.FontSize = compact || narrow ? 34 : 56;
+        SubtitleText.FontSize = compact ? 17 : 22;
+        SubtitleText.LineHeight = compact ? 25 : 34;
+        ContentPanel.Spacing = compact ? 12 : 18;
+        ActionPanel.Orientation = narrow ? Orientation.Vertical : Orientation.Horizontal;
+        ActionPanel.Margin = new Thickness(0, compact ? 4 : 14, 0, 0);
+        PrimaryButton.FontSize = SecondaryButton.FontSize = compact ? 17 : 20;
+        PrimaryButton.Padding = SecondaryButton.Padding = compact ? new Thickness(28, 12, 28, 12) : new Thickness(40, 16, 40, 16);
+        TopBar.Padding = compact || narrow ? new Thickness(24, 18, 24, 18) : new Thickness(48, 28, 48, 28);
+        ContentScroll.Padding = new Thickness(narrow ? 20 : 40, 12, narrow ? 20 : 40, 12);
+        ClockText.Visibility = narrow ? Visibility.Collapsed : Visibility.Visible;
+        HintText.MaxWidth = Math.Max(160, Root.ActualWidth - 100);
+    }
+
+    async Task CompleteAsync(bool snooze)
+    {
+        if (_resolving || _closed)
+        {
+            return;
+        }
+        _resolving = true;
+        PrimaryButton.IsEnabled = SecondaryButton.IsEnabled = false;
+        ReminderMascot.State = snooze ? MascotState.Paused : MascotState.Celebrating;
+        if (snooze)
+        {
+            SecondaryText.Text = Loc.T("overlay.snoozed");
+        }
+        else
+        {
+            PrimaryText.Text = Loc.T(_phase == Phase.StandPrompt ? "overlay.confirmed.stand" : "overlay.confirmed.sit");
+        }
+
+        if (UiMotion.AnimationsEnabled)
+        {
+            EntranceStoryboard.Stop();
+            ContentPanel.Opacity = 1;
+            Glow.Opacity = 1;
+            ExitStoryboard.Begin();
+            try
+            {
+                await Task.Delay(180, _lifetime.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+        // Another display, a lock event or a newer reminder may have closed this window.
+        if (_closed)
+        {
+            return;
+        }
         if (_closePreview is not null)
         {
             _closePreview();
         }
-        else if (_phase == Phase.StandPrompt)
+        else if (_engine.Phase == _phase)
         {
-            _engine.ConfirmStanding();
-        }
-        else
-        {
-            _engine.ConfirmSitting();
+            if (snooze)
+            {
+                _engine.Snooze();
+            }
+            else if (_phase == Phase.StandPrompt)
+            {
+                _engine.ConfirmStanding();
+            }
+            else
+            {
+                _engine.ConfirmSitting();
+            }
         }
     }
 
-    void OnSecondaryClick(object sender, RoutedEventArgs e)
-    {
-        if (_closePreview is not null)
-        {
-            _closePreview();
-        }
-        else
-        {
-            _engine.Snooze();
-        }
-    }
+    async void OnPrimaryClick(object sender, RoutedEventArgs e) => await CompleteAsync(false);
+
+    async void OnSecondaryClick(object sender, RoutedEventArgs e) => await CompleteAsync(true);
 }

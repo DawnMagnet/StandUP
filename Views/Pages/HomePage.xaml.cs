@@ -1,7 +1,9 @@
 using System.Globalization;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using StandUP.Controls;
 using StandUP.Services;
 using Windows.Foundation;
 
@@ -13,7 +15,11 @@ public sealed partial class HomePage : Page
     const double RingThickness = 16;
 
     readonly ReminderEngine _engine = AppHost.Engine;
+    readonly DispatcherQueueTimer _feedbackTimer;
     (Windows.UI.Color From, Windows.UI.Color To) _palette;
+    (Phase Phase, bool Paused, bool Locked)? _lastState;
+    bool? _compact;
+    bool _concealing;
 
     public HomePage()
     {
@@ -22,13 +28,33 @@ public sealed partial class HomePage : Page
         StandIconBack.Background = Palette.Gradient(Palette.Stand);
         BreakIconBack.Background = Palette.Gradient(Palette.Prompt);
         RemainingText.Text = Loc.T("home.remaining");
+        _feedbackTimer = DispatcherQueue.CreateTimer();
+        _feedbackTimer.Interval = TimeSpan.FromSeconds(4);
+        _feedbackTimer.IsRepeating = false;
+        _feedbackTimer.Tick += (_, _) =>
+        {
+            _concealing = true;
+            UiMotion.Conceal(ActionFeedback, 8, () =>
+            {
+                // A newer message may have arrived while this one was leaving.
+                if (!_concealing) return;
+                _concealing = false;
+                ActionFeedback.Visibility = Visibility.Collapsed;
+            });
+        };
 
         Loaded += (_, _) =>
         {
+            _lastState = null;
             _engine.Changed += Refresh;
             Refresh();
         };
-        Unloaded += (_, _) => _engine.Changed -= Refresh;
+        Unloaded += (_, _) =>
+        {
+            _engine.Changed -= Refresh;
+            _feedbackTimer.Stop();
+            ActionFeedback.Visibility = Visibility.Collapsed;
+        };
     }
 
     public static string FormatSpan(TimeSpan span)
@@ -41,6 +67,11 @@ public sealed partial class HomePage : Page
 
     void Refresh()
     {
+        var state = (_engine.Phase, _engine.IsPaused, _engine.IsLocked);
+        var previous = _lastState;
+        var stateChanged = previous.HasValue && previous.Value != state;
+        _lastState = state;
+
         var now = DateTime.Now;
         GreetingText.Text = Loc.T(now.Hour switch
         {
@@ -110,6 +141,64 @@ public sealed partial class HomePage : Page
         SitStatText.Text = AppHost.Duration(stats.Sitting);
         StandStatText.Text = AppHost.Duration(stats.Standing);
         BreakStatText.Text = stats.Breaks.ToString(CultureInfo.InvariantCulture);
+
+        HeroMascot.State = _engine switch
+        {
+            { IsLocked: true } or { IsPaused: true } => MascotState.Paused,
+            { Phase: Phase.StandPrompt } => MascotState.Prompt,
+            { Phase: Phase.Standing or Phase.SitPrompt } => MascotState.Standing,
+            _ => MascotState.Sitting,
+        };
+
+        if (stateChanged)
+        {
+            UiMotion.Reveal(HeroDetails, 8);
+            if (!_engine.IsLocked && previous!.Value.Phase == Phase.StandPrompt && _engine.Phase == Phase.Standing)
+            {
+                ShowFeedback("home.feedback.standing", "\uE73E");
+                UiMotion.Emphasize(BreakIconBack);
+            }
+            else if (!_engine.IsLocked && previous!.Value.Phase == Phase.SitPrompt && _engine.Phase == Phase.Sitting)
+            {
+                ShowFeedback("home.feedback.sitting", "\uE73E");
+            }
+        }
+    }
+
+    void OnHeroSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var compact = e.NewSize.Width < 740;
+        if (_compact == compact) return;
+        _compact = compact;
+        HeroContent.ColumnSpacing = compact ? 0 : 32;
+        HeroContent.RowSpacing = compact ? 24 : 0;
+        Grid.SetColumn(HeroDetails, compact ? 0 : 1);
+        Grid.SetRow(HeroDetails, compact ? 1 : 0);
+        Grid.SetColumnSpan(HeroDetails, compact ? 2 : 1);
+        Grid.SetColumnSpan(TimerVisual, compact ? 2 : 1);
+        TimerVisual.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        ActionButtons.Orientation = compact ? Orientation.Vertical : Orientation.Horizontal;
+        foreach (var button in ActionButtons.Children.OfType<Button>())
+        {
+            button.HorizontalAlignment = compact ? HorizontalAlignment.Stretch : HorizontalAlignment.Left;
+            button.HorizontalContentAlignment = HorizontalAlignment.Center;
+        }
+    }
+
+    void ShowFeedback(string key, string glyph)
+    {
+        FeedbackText.Text = Loc.T(key);
+        FeedbackGlyph.Glyph = glyph;
+        FeedbackGlyph.Foreground = Palette.Solid(Palette.For(_engine).From);
+        var wasVisible = ActionFeedback.Visibility == Visibility.Visible && !_concealing;
+        _concealing = false;
+        ActionFeedback.Visibility = Visibility.Visible;
+        if (!wasVisible)
+        {
+            UiMotion.Reveal(ActionFeedback, 12);
+        }
+        _feedbackTimer.Stop();
+        _feedbackTimer.Start();
     }
 
     static Geometry? Arc(double progress)
@@ -140,7 +229,15 @@ public sealed partial class HomePage : Page
 
     void OnBreakNowClick(object sender, RoutedEventArgs e) => _engine.BreakNow();
 
-    void OnPauseClick(object sender, RoutedEventArgs e) => _engine.TogglePause();
+    void OnPauseClick(object sender, RoutedEventArgs e)
+    {
+        _engine.TogglePause();
+        ShowFeedback(_engine.IsPaused ? "home.feedback.paused" : "home.feedback.resumed", _engine.IsPaused ? "\uE769" : "\uE768");
+    }
 
-    void OnRestartClick(object sender, RoutedEventArgs e) => _engine.Restart();
+    void OnRestartClick(object sender, RoutedEventArgs e)
+    {
+        _engine.Restart();
+        ShowFeedback("home.feedback.restarted", "\uE72C");
+    }
 }

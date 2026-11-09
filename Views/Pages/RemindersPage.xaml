@@ -8,11 +8,6 @@
 
     <ScrollViewer>
         <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
-            <StackPanel.ChildrenTransitions>
-                <TransitionCollection>
-                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40" />
-                </TransitionCollection>
-            </StackPanel.ChildrenTransitions>
 
             <TextBlock Text="{c:L Key=nav.reminders}" Style="{StaticResource PageTitleStyle}" />
 
@@ -32,14 +27,12 @@
             <TextBlock Text="{c:L Key=reminders.preview}" Style="{StaticResource SectionHeaderStyle}" Margin="2,4,0,8" />
 
             <!-- Miniature of the full-screen reminder that follows the text fields as you type. -->
-            <Grid Height="320" CornerRadius="{StaticResource HeroCornerRadius}" Background="#FF0B1020">
+            <Grid x:Name="PreviewCard" MinHeight="360" CornerRadius="{StaticResource HeroCornerRadius}" Background="#FF0B1020">
                 <Border x:Name="PreviewGlow" />
                 <Ellipse x:Name="PreviewOrbA" Width="360" Height="360" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-120,-160,0,0" />
                 <Ellipse x:Name="PreviewOrbB" Width="420" Height="420" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-160,-220" />
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Padding="32,0">
-                    <Border x:Name="PreviewIconBack" Width="64" Height="64" CornerRadius="32" HorizontalAlignment="Center">
-                        <FontIcon x:Name="PreviewGlyph" FontSize="28" Foreground="White" />
-                    </Border>
+                <StackPanel x:Name="PreviewContent" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Padding="28,24">
+                    <c:StandupMascot x:Name="PreviewMascot" Width="112" Height="112" HorizontalAlignment="Center" />
                     <TextBlock
                         x:Name="PreviewTitle"
                         FontSize="28"
@@ -56,12 +49,12 @@
                         TextWrapping="Wrap"
                         MaxWidth="520"
                         HorizontalAlignment="Center" />
-                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,10,0,0">
+                    <StackPanel x:Name="PreviewActions" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,10,0,0">
                         <Border x:Name="PreviewPrimary" CornerRadius="18" Padding="22,8">
-                            <TextBlock x:Name="PreviewPrimaryText" Foreground="White" FontWeight="SemiBold" />
+                            <TextBlock x:Name="PreviewPrimaryText" Foreground="White" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="280" />
                         </Border>
                         <Border x:Name="PreviewSecondary" CornerRadius="18" Padding="22,8" Background="#26FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1">
-                            <TextBlock x:Name="PreviewSecondaryText" Foreground="White" />
+                            <TextBlock x:Name="PreviewSecondaryText" Foreground="White" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="280" />
                         </Border>
                     </StackPanel>
                 </StackPanel>

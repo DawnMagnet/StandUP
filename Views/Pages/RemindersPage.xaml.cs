@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using StandUP.Controls;
 using StandUP.Services;
 
 namespace StandUP.Views.Pages;
@@ -15,6 +16,8 @@ public sealed partial class RemindersPage : Page
     {
         InitializeComponent();
         Load();
+        PreviewCard.SizeChanged += (_, _) => PreviewActions.Orientation =
+            PreviewCard.ActualWidth < 620 ? Orientation.Vertical : Orientation.Horizontal;
         Unloaded += (_, _) => Save();
     }
 
@@ -38,10 +41,13 @@ public sealed partial class RemindersPage : Page
         PreviewGlow.Background = Palette.Gradient(palette, 0.35, 0.05);
         PreviewOrbA.Fill = Orb(palette.From);
         PreviewOrbB.Fill = Orb(palette.To);
-        PreviewIconBack.Background = Palette.Gradient(palette);
         PreviewPrimary.Background = Palette.Gradient(palette);
-        PreviewGlyph.Glyph = stand ? "\uE805" : "\uE7F4";
+        PreviewMascot.State = stand ? MascotState.Prompt : MascotState.SitPrompt;
         UpdatePreview();
+        if (IsLoaded)
+        {
+            UiMotion.Reveal(PreviewContent, 12);
+        }
     }
 
     static RadialGradientBrush Orb(Windows.UI.Color color)

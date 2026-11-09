@@ -8,11 +8,6 @@
 
     <ScrollViewer>
         <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
-            <StackPanel.ChildrenTransitions>
-                <TransitionCollection>
-                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40" />
-                </TransitionCollection>
-            </StackPanel.ChildrenTransitions>
 
             <TextBlock Text="{c:L Key=nav.schedule}" Style="{StaticResource PageTitleStyle}" />
 
