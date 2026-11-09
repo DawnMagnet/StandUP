@@ -190,7 +190,9 @@ public sealed partial class OverlayWindow : Window
     {
         var compact = Root.ActualHeight < 760;
         var narrow = Root.ActualWidth < 700;
-        MascotStage.Width = MascotStage.Height = compact ? 140 : 220;
+        // Never draw the mascot larger than its 256 px source, or it turns soft.
+        var maxSide = Math.Floor(256 / (Root.XamlRoot?.RasterizationScale ?? 1));
+        MascotStage.Width = MascotStage.Height = Math.Min(compact ? 140 : 220, maxSide);
         MascotStage.Margin = new Thickness(0, 0, 0, compact ? 0 : 12);
         TitleText.FontSize = compact || narrow ? 34 : 56;
         SubtitleText.FontSize = compact ? 17 : 22;

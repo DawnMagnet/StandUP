@@ -52,9 +52,9 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Grid x:Name="MascotStage" Width="176" Height="194" VerticalAlignment="Center">
-                            <Ellipse x:Name="MascotShadow" Width="150" Height="26" VerticalAlignment="Bottom" />
-                            <c:StandupMascot x:Name="HeroMascot" Width="176" Height="176" VerticalAlignment="Top" />
+                        <Grid x:Name="MascotStage" Width="168" Height="186" VerticalAlignment="Center">
+                            <Ellipse x:Name="MascotShadow" Width="144" Height="24" VerticalAlignment="Bottom" />
+                            <c:StandupMascot x:Name="HeroMascot" Width="168" Height="168" VerticalAlignment="Top" />
                         </Grid>
 
                         <StackPanel x:Name="HeroDetails" Grid.Column="1" VerticalAlignment="Center">

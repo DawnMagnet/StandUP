@@ -61,6 +61,11 @@ public sealed partial class StandupMascot : Button
     SpriteVisual? _waveBody;
     SpriteVisual? _waveArm;
     CompositionSurfaceBrush? _brush;
+    CompositionSurfaceBrush? _brushNext;
+    SpriteVisual? _spriteNext;
+    // Fractional frame position. Two sprites show the frames on either side of it, the upper one faded by the
+    // fraction, so playback is continuous at any refresh rate instead of stepping through 60 fps frames.
+    CompositionPropertySet? _pos;
     XamlRoot? _root;
     MascotState _state;
     MotionClip? _clip;
@@ -129,13 +134,13 @@ public sealed partial class StandupMascot : Button
         {
             if (!_clipClock.IsRunning || _clip is null) return _frame;
             var elapsed = _clipClock.Elapsed.TotalSeconds;
-            var frame = _clip.Keys[0].Frame;
-            foreach (var (time, key) in _clip.Keys)
+            var frame = _clip.Keys[0].Pos;
+            foreach (var key in _clip.Keys)
             {
-                if (time > elapsed) break;
-                frame = key;
+                if (key.Time > elapsed) break;
+                frame = key.Pos;
             }
-            return frame;
+            return Deghost((int)Math.Round(frame), 0);
         }
     }
 
@@ -273,16 +278,28 @@ public sealed partial class StandupMascot : Button
             _sprite = c.CreateSpriteVisual();
             _sprite.Brush = _brush;
             _sprite.Clip = c.CreateInsetClip();
+            _brushNext = c.CreateSurfaceBrush(atlas);
+            _brushNext.Stretch = CompositionStretch.None;
+            _brushNext.HorizontalAlignmentRatio = 0;
+            _brushNext.VerticalAlignmentRatio = 0;
+            _spriteNext = c.CreateSpriteVisual();
+            _spriteNext.Brush = _brushNext;
+            _spriteNext.Clip = c.CreateInsetClip();
+            _pos = c.CreatePropertySet();
+            _pos.InsertScalar("Pos", frame);
             _waveArm = c.CreateSpriteVisual();
-            // Back to front: wave body, the frame on top of it (faded out while waving), the moving arm.
+            // Back to front: wave body, the frame pair on top of it (faded out while waving), the moving arm.
             _rig.Children.InsertAtTop(_waveBody);
             _rig.Children.InsertAtTop(_sprite);
+            _rig.Children.InsertAtTop(_spriteNext);
             _rig.Children.InsertAtTop(_waveArm);
             ElementCompositionPreview.SetElementChildVisual(_spriteHost, _rig);
         }
-        else _brush!.Surface = atlas;
+        else { _brush!.Surface = atlas; _brushNext!.Surface = atlas; }
         _rig.Scale = new Vector3(FrameSize / _unit, FrameSize / _unit, 1);
         _sprite!.Size = new Vector2(_unit);
+        _spriteNext!.Size = new Vector2(_unit);
+        BindFrames(c);
         foreach (var (visual, surface) in new[] { (_waveBody!, body), (_waveArm!, arm) })
         {
             visual.Size = new Vector2(_unit);
@@ -297,7 +314,21 @@ public sealed partial class StandupMascot : Button
         UpdateState();
     }
 
-    Vector2 AtlasOffset(int frame) => new(-(frame % Columns) * _unit, -(frame / Columns) * _unit);
+    void BindFrames(Compositor c)
+    {
+        ExpressionAnimation Offset(string frame)
+        {
+            var e = c.CreateExpressionAnimation($"Vector2(-Mod({frame}, {Columns}) * u, -Floor(({frame}) / {Columns}) * u)");
+            e.SetReferenceParameter("p", _pos!);
+            e.SetScalarParameter("u", _unit);
+            return e;
+        }
+        _brush!.StartAnimation("Offset", Offset("Floor(p.Pos)"));
+        _brushNext!.StartAnimation("Offset", Offset($"Min(Floor(p.Pos) + 1, {LastFrame})"));
+        var fade = c.CreateExpressionAnimation("p.Pos - Floor(p.Pos)");
+        fade.SetReferenceParameter("p", _pos!);
+        _spriteNext!.StartAnimation("Opacity", fade);
+    }
 
     // ---------------------------------------------------------------- frame clips
 
@@ -317,13 +348,25 @@ public sealed partial class StandupMascot : Button
     static bool Crosses(int previous, int next) =>
         Ghosts.Any(g => (previous < g.From && next > g.To) || (previous > g.To && next < g.From));
 
-    /// <summary>A sequence of source frames with the moment each one appears.</summary>
+    /// <summary>The frame position over time, sampled at 60 Hz and interpolated by the compositor in between.</summary>
     sealed class MotionClip
     {
-        public readonly List<(double Time, int Frame)> Keys = [];
+        public readonly List<(double Time, double Pos, bool Jump)> Keys = [];
         public readonly List<double> Pops = [];
         public double Seconds;
-        public int Last => Keys[^1].Frame;
+        public double Last => Keys[^1].Pos;
+    }
+
+    // Keeps a position out of the ghost frames, and out of the blend toward the first ghost frame.
+    static double Deghost(double pos, int direction)
+    {
+        foreach (var (a, b) in Ghosts)
+        {
+            if (pos <= a - 1 || pos >= b + 1) continue;
+            var mid = (a + b) / 2.0;
+            return direction >= 0 ? (pos < mid ? a - 1 : b + 1) : (pos > mid ? b + 1 : a - 1);
+        }
+        return pos;
     }
 
     static void Append(MotionClip clip, int from, int to, double seconds)
@@ -331,18 +374,18 @@ public sealed partial class StandupMascot : Button
         var start = clip.Seconds;
         var count = Math.Abs(to - from);
         var direction = Math.Sign(to - from);
-        // One key per display frame at 60 Hz; easing picks which source frame shows at each moment.
         var samples = Math.Max(1, (int)Math.Round(seconds * FramesPerSecond));
-        int? previous = clip.Keys.Count > 0 ? clip.Last : null;
+        double? previous = clip.Keys.Count > 0 ? clip.Last : null;
         for (var i = clip.Keys.Count == 0 ? 0 : 1; i <= samples; i++)
         {
             var t = (double)i / samples;
-            var frame = Deghost(from + direction * (int)Math.Round(Ease(t) * count), direction);
-            if (previous == frame) continue;
+            var pos = Deghost(from + direction * Ease(t) * count, direction);
             var time = start + t * seconds;
-            if (previous is int p && Crosses(p, frame)) clip.Pops.Add(time);
-            clip.Keys.Add((time, frame));
-            previous = frame;
+            // Crossing a ghost range is a cut, not a blend through it; the pop covers it.
+            var jump = previous is double p && Crosses((int)Math.Round(p), (int)Math.Round(pos));
+            if (jump) clip.Pops.Add(time);
+            clip.Keys.Add((time, pos, jump));
+            previous = pos;
         }
         clip.Seconds = start + seconds;
     }
@@ -353,10 +396,10 @@ public sealed partial class StandupMascot : Button
         _clipClock.Reset();
         _clip = null;
         _frame = Deghost(Math.Clamp(frame, 0, LastFrame), 0);
-        if (_brush is not null)
+        if (_pos is not null)
         {
-            _brush.StopAnimation("Offset");
-            _brush.Offset = AtlasOffset(_frame);
+            _pos.StopAnimation("Pos");
+            _pos.InsertScalar("Pos", _frame);
         }
         var host = ElementCompositionPreview.GetElementVisual(_spriteHost);
         host.StopAnimation("Scale");
@@ -404,22 +447,21 @@ public sealed partial class StandupMascot : Button
     {
         FreezeFrame(from);
         from = _frame;
-        if (!CanAnimate || from == to || _brush is null) { FreezeFrame(to); completed?.Invoke(); return; }
+        if (!CanAnimate || from == to || _pos is null) { FreezeFrame(to); completed?.Invoke(); return; }
         var clip = new MotionClip();
         Append(clip, from, to, Math.Abs(to - from) / FramesPerSecond * PoseTimeScale);
         if (clip.Keys.Count < 2) { FreezeFrame(to); completed?.Invoke(); return; }
 
-        var compositor = _brush.Compositor;
-        var animation = compositor.CreateVector2KeyFrameAnimation();
-        var step = compositor.CreateStepEasingFunction(1);
-        step.IsInitialStepSingleFrame = false;
-        step.IsFinalStepSingleFrame = true;
-        foreach (var (time, frame) in clip.Keys)
-            animation.InsertKeyFrame((float)(time / clip.Seconds), AtlasOffset(frame), step);
+        var compositor = _pos.Compositor;
+        var animation = compositor.CreateScalarKeyFrameAnimation();
+        var linear = compositor.CreateLinearEasingFunction();
+        var cut = compositor.CreateStepEasingFunction(1);
+        foreach (var (time, pos, jump) in clip.Keys)
+            animation.InsertKeyFrame((float)(time / clip.Seconds), (float)pos, jump ? cut : linear);
         animation.Duration = TimeSpan.FromSeconds(clip.Seconds);
 
         var generation = _clipGeneration;
-        var last = clip.Last;
+        var last = (int)Math.Round(clip.Last);
         _clip = clip;
         _clipClock.Restart();
         var batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
@@ -429,7 +471,7 @@ public sealed partial class StandupMascot : Button
             FreezeFrame(last);
             if (CanAnimate) completed?.Invoke();
         });
-        _brush.StartAnimation("Offset", animation);
+        _pos.StartAnimation("Pos", animation);
         StartPops(clip);
         batch.End();
     }
