@@ -1,5 +1,5 @@
 #define AppName "StandUP"
-#define AppVersion "1.1.0"
+#define AppVersion "1.2.0"
 #define AppExe "StandUP.exe"
 ; Build flavor and the folder dotnet publish wrote it to, e.g.
 ;   ISCC /DFlavor=full /DPublishDir=..\publish\full StandUP.iss
