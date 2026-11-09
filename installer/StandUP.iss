@@ -1,6 +1,14 @@
 #define AppName "StandUP"
 #define AppVersion "1.1.0"
 #define AppExe "StandUP.exe"
+; Build flavor and the folder dotnet publish wrote it to, e.g.
+;   ISCC /DFlavor=full /DPublishDir=..\publish\full StandUP.iss
+#ifndef Flavor
+  #define Flavor "standard"
+#endif
+#ifndef PublishDir
+  #define PublishDir "..\publish"
+#endif
 
 [Setup]
 AppId={{6E1B7C3A-4D52-4F0B-9A55-3C1F8E7B2D90}
@@ -14,7 +22,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=Output
-OutputBaseFilename=StandUP-Setup-{#AppVersion}
+OutputBaseFilename=StandUP-Setup-{#AppVersion}-{#Flavor}
 SetupIconFile=..\Assets\StandUP.ico
 UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2/max
@@ -41,7 +49,7 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Ext
 Type: filesandordirs; Name: "{app}\*"
 
 [Files]
-Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"

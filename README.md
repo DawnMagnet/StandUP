@@ -30,11 +30,14 @@
 
 ## Install
 
-Download `StandUP-Setup-<version>.exe` from the [latest release](../../releases/latest) and run it. It installs for
-the current user only and needs no administrator rights.
+Download one installer from the [latest release](../../releases/latest) and run it. All of them install for the
+current user only and need no administrator rights. Windows 10 version 2004 (build 19041) or later, x64.
 
-Requirements: Windows 10 version 2004 (build 19041) or later, x64, and the
-[.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0). The Windows App SDK is bundled.
+| Installer | Includes | You also need |
+| --- | --- | --- |
+| `StandUP-Setup-<version>-full.exe` | .NET and the Windows App SDK | Nothing. Pick this one if unsure. |
+| `StandUP-Setup-<version>-standard.exe` | The Windows App SDK | [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+| `StandUP-Setup-<version>-lite.exe` | Only StandUP itself | [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) and the [Windows App SDK 2 runtime](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) |
 
 ## Build from source
 
@@ -46,14 +49,13 @@ dotnet build -c Debug
 
 The app is at `bin\Debug\net10.0-windows10.0.26100.0\win-x64\StandUP.exe`.
 
-To build the installer, also install [Inno Setup 6](https://jrsoftware.org/isinfo.php), then:
+To build the installers, also install [Inno Setup 6](https://jrsoftware.org/isinfo.php), then:
 
 ```powershell
-dotnet publish -c Release -o publish
-& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\StandUP.iss
+.\build\release.ps1
 ```
 
-The installer is written to `installer\Output\`.
+It publishes the lite, standard and full flavors and writes their installers to `installer\Output\`.
 
 ## Project layout
 
@@ -64,6 +66,7 @@ The installer is written to `installer\Output\`.
 | `Controls/` | The mascot, pulse rings and settings cards |
 | `Assets/Mascot/` | Mascot artwork: the sit/stand frame atlas and the wave cut-outs |
 | `installer/` | Inno Setup script |
+| `build/` | Release script that builds all installer flavors |
 
 Settings and daily statistics are stored in `%LOCALAPPDATA%\StandUP`.
 
