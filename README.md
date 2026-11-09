@@ -55,7 +55,10 @@ To build the installers, also install [Inno Setup 6](https://jrsoftware.org/isin
 .\build\release.ps1
 ```
 
-It publishes the lite, standard and full flavors and writes their installers to `installer\Output\`.
+It publishes the lite, standard and full flavors and writes their installers to `installer\Output\`. The full flavor
+is compiled with Native AOT, which needs the Visual Studio "Desktop development with C++" workload; pass `-NoAot` to
+build a regular self-contained full flavor instead. Pushing a `v*` tag builds all three on GitHub Actions and attaches
+them to the release.
 
 ## Project layout
 
