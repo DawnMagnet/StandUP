@@ -13,7 +13,7 @@ namespace StandUP.Controls;
 /// Two rounded rings that grow out from behind the mascot tile, half a period apart.
 /// Vector shapes with a non-scaling stroke stay crisp at every size, and the compositor runs them.
 /// </summary>
-public sealed class PulseRings : Grid
+public sealed partial class PulseRings : Grid
 {
     const float Period = 2.4f;
     const float Growth = 1.75f;

@@ -5,8 +5,6 @@ namespace StandUP.Services;
 // Activity totals for the current local day. Persisted so that a restart keeps today's numbers.
 public sealed class DailyStats
 {
-    static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     static string FilePath => Path.Combine(SettingsStore.DataDirectory, "stats.json");
 
     public DateOnly Day { get; set; } = DateOnly.FromDateTime(DateTime.Now);
@@ -23,7 +21,7 @@ public sealed class DailyStats
         {
             if (File.Exists(FilePath))
             {
-                var stats = JsonSerializer.Deserialize<DailyStats>(File.ReadAllText(FilePath));
+                var stats = JsonSerializer.Deserialize(File.ReadAllText(FilePath), StandUpJson.Default.DailyStats);
                 if (stats is not null)
                 {
                     stats.RollOver();
@@ -55,7 +53,7 @@ public sealed class DailyStats
         try
         {
             Directory.CreateDirectory(SettingsStore.DataDirectory);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonOptions));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, StandUpJson.Default.DailyStats));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

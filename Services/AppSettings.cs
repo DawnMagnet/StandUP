@@ -84,8 +84,6 @@ public static class AppBackdrop
 
 public sealed class SettingsStore
 {
-    static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     public static string DataDirectory { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StandUP");
 
@@ -100,7 +98,7 @@ public sealed class SettingsStore
         {
             if (File.Exists(FilePath))
             {
-                store.Current = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings();
+                store.Current = JsonSerializer.Deserialize(File.ReadAllText(FilePath), StandUpJson.Default.AppSettings) ?? new AppSettings();
             }
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
@@ -118,7 +116,7 @@ public sealed class SettingsStore
     {
         Current.Clamp();
         Directory.CreateDirectory(DataDirectory);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(Current, JsonOptions));
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(Current, StandUpJson.Default.AppSettings));
         Saved?.Invoke();
     }
 }

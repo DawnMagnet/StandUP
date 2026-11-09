@@ -26,7 +26,7 @@ public enum MascotState { Sitting, Standing, Prompt, Paused, Celebrating, SitPro
 /// plus that arm as its own layer. The arm really rotates at the shoulder, so the hand travels instead of
 /// cross-fading between poses.</para>
 /// </remarks>
-public sealed class StandupMascot : Button
+public sealed partial class StandupMascot : Button
 {
     const int FrameSize = 256;
     const int Columns = 16;

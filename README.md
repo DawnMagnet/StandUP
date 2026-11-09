@@ -35,7 +35,7 @@ current user only and need no administrator rights. Windows 10 version 2004 (bui
 
 | Installer | Includes | You also need |
 | --- | --- | --- |
-| `StandUP-Setup-<version>-full.exe` | .NET and the Windows App SDK | Nothing. Pick this one if unsure. |
+| `StandUP-Setup-<version>-full.exe` | Everything, compiled ahead of time with Native AOT | Nothing. Pick this one if unsure. |
 | `StandUP-Setup-<version>-standard.exe` | The Windows App SDK | [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `StandUP-Setup-<version>-lite.exe` | Only StandUP itself | [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) and the [Windows App SDK 2 runtime](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) |
 
@@ -67,6 +67,7 @@ It publishes the lite, standard and full flavors and writes their installers to 
 | `Assets/Mascot/` | Mascot artwork: the sit/stand frame atlas and the wave cut-outs |
 | `installer/` | Inno Setup script |
 | `build/` | Release script that builds all installer flavors |
+| `.github/workflows/` | CI that builds the installers (full flavor with Native AOT) and attaches them to tagged releases |
 
 Settings and daily statistics are stored in `%LOCALAPPDATA%\StandUP`.
 

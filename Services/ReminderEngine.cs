@@ -21,6 +21,7 @@ public sealed class ReminderEngine : IDisposable
     readonly Stopwatch _clock = Stopwatch.StartNew();
     TimeSpan _last;
     DateTime _lockStartUtc;
+    TimeSpan _lastStatsSave;
 
     public Phase Phase { get; private set; } = Phase.Sitting;
     public TimeSpan Elapsed { get; private set; }
@@ -130,6 +131,12 @@ public sealed class ReminderEngine : IDisposable
             Stats.StandingSeconds += delta.TotalSeconds;
         }
         Elapsed += delta;
+        // Save now and then so a killed process (an installer upgrade, a crash) loses at most a minute.
+        if (_clock.Elapsed - _lastStatsSave >= TimeSpan.FromMinutes(1))
+        {
+            _lastStatsSave = _clock.Elapsed;
+            Stats.Save();
+        }
     }
 
     void Enter(Phase phase, TimeSpan elapsed)
