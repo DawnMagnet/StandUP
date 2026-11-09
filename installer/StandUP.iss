@@ -1,5 +1,5 @@
 #define AppName "StandUP"
-#define AppVersion "1.2.0"
+#define AppVersion "1.2.1"
 #define AppExe "StandUP.exe"
 ; Build flavor and the folder dotnet publish wrote it to, e.g.
 ;   ISCC /DFlavor=full /DPublishDir=..\publish\full StandUP.iss
@@ -49,7 +49,7 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Ext
 Type: filesandordirs; Name: "{app}\*"
 
 [Files]
-Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
